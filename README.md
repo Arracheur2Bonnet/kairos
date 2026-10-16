@@ -11,6 +11,7 @@ Kairos est une brique d'intelligence artificielle branchée sur Cassiopée. Elle
 | `Kairos.pptx` | Présentation PowerPoint (13 diapositives, notes de l'orateur, vidéo de démo incorporée) |
 | `presentation.html` | La même présentation en HTML, à ouvrir dans un navigateur (touches : flèches, N notes, S sommaire, F plein écran) |
 | `demo/kairos.html` | Prototype cliquable, fonctionne hors ligne |
+| `demo/video-demo.mp4` | Vidéo de la démonstration |
 | `Kairos-dossier-redige.pdf` | Dossier rédigé et pitch |
 | `SKILL.md` | Guide de design du front |
 | `presentation-chronos-ancienne.html`, `_version_circulation/` | Archives des versions précédentes (nom de travail : Chronos) |
