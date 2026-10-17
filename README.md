@@ -431,4 +431,4 @@ Ce dépôt est la seule source du projet : tout ce qui a été écrit ou décid
 
 ## Licence
 
-Aucune licence pour l’instant : tous droits réservés.
+© 2026 Équipe Kairos. Ce dépôt est publié sous licence [Creative Commons Attribution - Pas d’Utilisation Commerciale 4.0 International (CC BY-NC 4.0)](LICENSE). Vous pouvez lire, partager et adapter ces contenus en citant « Équipe Kairos » et en indiquant les modifications, mais pas pour un usage commercial. Pour un autre usage, par exemple un pilote dans une juridiction, contactez-nous via le dépôt. Les noms de logiciels et d’institutions cités appartiennent à leurs titulaires ; les données sont fictives.

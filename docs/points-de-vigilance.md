@@ -41,7 +41,7 @@ Ce qui n’est pas vérifié, ce qui diffère d’un livrable à l’autre, et c
 - Toutes les données sont fictives (tribunal de Valmont, Corbelle, noms inventés, prénoms français).
 - Aucun nom de personne de l’équipe, aucun courriel, aucun chemin de poste de travail dans les fichiers suivis. L’identité de commit est l’adresse « noreply » de GitHub.
 - Les métadonnées du PowerPoint (auteur « Steve Canny », date de 2013, issues du modèle de la bibliothèque qui l’a généré) ont été remplacées.
-- Le dépôt est **privé**. Avant de le publier : relire ce fichier, vérifier la mention de l’équipe, choisir une licence. Le dépôt n’en a aucune : tous droits réservés.
+- Le dépôt est **privé**. Avant de le publier : relire ce fichier, vérifier la mention de l’équipe et vérifier la licence : CC BY-NC 4.0 (fichier `LICENSE`).
 - Les contenus de tiers (page de l’ANTS, guides de conception fournis pendant le travail) ne sont pas republiés.
 - Un lien d’image temporaire d’un service de stockage figurait dans des textes collés : retiré.
 - Recommandé côté GitHub : authentification à deux facteurs, et le réglage « Block command line pushes that expose my email ».
@@ -51,4 +51,4 @@ Ce qui n’est pas vérifié, ce qui diffère d’un livrable à l’autre, et c
 1. Le sens du 55,3 % (point 1).
 2. La phrase « demande sa mise en liberté » dans le dossier.
 3. Refaire ou non la vidéo, et le prototype sur le scénario du pitch.
-4. La licence, et le passage du dépôt en public.
+4. Le passage du dépôt en public (la licence CC BY-NC 4.0 est en place).
