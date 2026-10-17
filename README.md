@@ -340,6 +340,44 @@ Le prototype a été construit avant la version finale du pitch, et il faut le l
 
 `Kairos.pptx` compte 13 diapositives, avec les notes de l’orateur et la vidéo de démonstration intégrée. `presentation.html` en est la version pour navigateur : flèches pour avancer, N pour les notes de l’orateur, S pour le sommaire, F pour le plein écran. Le pitch dure environ 4 minutes 30, démonstration d’une minute en plus ; son texte est aux pages 3 et 4 du dossier rédigé et dans [docs/pitch.md](docs/pitch.md), avec le déroulé diapositive par diapositive.
 
+Le déroulé complet est dans [docs/pitch.md](docs/pitch.md). Quelques diapositives pour en donner l’idée :
+
+<p align="center">
+  <img src="docs/img/diapo-03-faits.png" width="760" alt="Diapositive : 55 % des tribunaux préviennent la victime quand la cour d’appel annule l’ordonnance de protection, contre 95 % quand l’auteur sort en fin de peine.">
+</p>
+
+<p align="center"><em>Diapositive 3, les faits : à peine un tribunal sur deux prévient la victime quand la cour d’appel annule la protection.</em></p>
+
+<p align="center">
+  <img src="docs/img/diapo-04-pourquoi.png" width="760" alt="Diapositive : tribunal, cour d’appel, prison et police ont chacun leur logiciel, séparés par des croix.">
+</p>
+
+<p align="center"><em>Diapositive 4 : chacun son logiciel, et personne ne vérifie que l’information est arrivée.</em></p>
+
+<p align="center">
+  <img src="docs/img/diapo-07-trois-fonctions.png" width="760" alt="Diapositive : les trois fonctions de Kairos, fiabiliser les données, interconnecter les services, notifier automatiquement.">
+</p>
+
+<p align="center"><em>Diapositive 7 : les trois fonctions, dont la troisième est le cœur du projet.</em></p>
+
+<p align="center">
+  <img src="docs/img/diapo-08-squelette.png" width="760" alt="Diapositive : le squelette de Kairos, avec les sources, ce que fait l’IA et ce que fait la plateforme.">
+</p>
+
+<p align="center"><em>Diapositive 8, la seule diapositive technique : l’IA propose, le greffe valide, la plateforme envoie et prouve.</em></p>
+
+<p align="center">
+  <img src="docs/img/diapo-10-comme-un-colis.png" width="760" alt="Diapositive : le suivi de la décision sur un téléphone, avec la victime, son avocat et la police, puis la consultation le lendemain.">
+</p>
+
+<p align="center"><em>Diapositive 10 : le suivi d’une décision, comme celui d’un colis.</em></p>
+
+<p align="center">
+  <img src="docs/img/diapo-12-humain-valide.png" width="760" alt="Diapositive : et c’est toujours un humain qui valide.">
+</p>
+
+<p align="center"><em>Diapositive 12 : un humain valide, toujours.</em></p>
+
 ## L’équipe
 
 L’équipe souhaite rester anonyme : aucun nom n’apparaît dans ce dépôt. Elle réunit deux profils hybrides, à la croisée de l’ingénierie et du management, des profils juridiques, et un mentor, avocat. Le mentor est aussi l’expert dont la remarque, le 15 octobre, a changé la conception.
