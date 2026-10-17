@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Vigie procédurale</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout : barre d’application collante + onglets ; vues en grille 12 colonnes qui s’empilent sous 960px ; tableaux et timeline défilent dans leur propre conteneur */
+:root{
+  --bg:#F1F3F6; --surface:#FFFFFF; --surface-2:#E9EDF2; --ink:#121925; --ink-2:#434E60; --muted:#667185; --line:#D8DDE5; --line-2:#BFC7D3;
+  --accent:#1B4C8A; --accent-ink:#FFFFFF; --accent-soft:#E1E9F5;
+  --ok:#14773A; --ok-soft:#E0F1E5; --warn:#955700; --warn-soft:#FAEED6; --crit:#B0261E; --crit-soft:#F9E2E0;
+  --p-penal:#eb6834; --p-op:#6250d6; --p-je:#1baf7a; --p-jaf:#2a78d6;
+  --shadow:0 1px 2px rgba(18,25,37,.06),0 8px 24px rgba(18,25,37,.08);
+  --f-display:"Spectral",Georgia,"Times New Roman",serif;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --lw:180px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1218; --surface:#151C26; --surface-2:#1C2531; --ink:#E6EAF0; --ink-2:#B3BCCA; --muted:#8994A6; --line:#283241; --line-2:#3A4657;
+    --accent:#86AEEA; --accent-ink:#0D1218; --accent-soft:#1A2A42;
+    --ok:#55C283; --ok-soft:#13281D; --warn:#E5A845; --warn-soft:#2D2413; --crit:#F2827A; --crit-soft:#341A1A;
+    --p-penal:#d95926; --p-op:#9085e9; --p-je:#199e70; --p-jaf:#3987e5;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1218; --surface:#151C26; --surface-2:#1C2531; --ink:#E6EAF0; --ink-2:#B3BCCA; --muted:#8994A6; --line:#283241; --line-2:#3A4657;
+  --accent:#86AEEA; --accent-ink:#0D1218; --accent-soft:#1A2A42;
+  --ok:#55C283; --ok-soft:#13281D; --warn:#E5A845; --warn-soft:#2D2413; --crit:#F2827A; --crit-soft:#341A1A;
+  --p-penal:#d95926; --p-op:#9085e9; --p-je:#199e70; --p-jaf:#3987e5;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--f-ui)}
+.wrap{max-width:1240px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+h1,h2,h3,h4{margin:0;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* Barre d’application */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.tb-in{display:flex;align-items:center;justify-content:space-between;gap:10px 24px;flex-wrap:wrap;padding-block:12px 4px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;flex:none}
+.brand-t{display:flex;flex-direction:column;line-height:1.15}
+.brand-n{font:600 21px/1 var(--f-display);letter-spacing:.01em}
+.brand-s{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.tb-ctx{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.demo{font:500 11px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;padding:5px 8px;border-radius:4px;background:var(--warn-soft);color:var(--warn)}
+.user{display:inline-flex;align-items:center;gap:6px}
+.avatar{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:600 10px/24px var(--f-ui);text-align:center}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-bottom:-1px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px 9px;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.count{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--surface-2);color:var(--ink-2);font:600 11px/20px var(--f-ui);text-align:center}
+.count.hot{background:var(--crit);color:var(--surface)}
+.count:empty{display:none}
+
+/* Structure */
+.main{padding-block:24px 32px}
+.view{display:flex;flex-direction:column;gap:20px}
+.view-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 40px;align-items:end}
+@media (max-width:860px){.view-head{grid-template-columns:1fr}}
+.eyebrow{font:500 12px/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+h1{font:600 clamp(24px,3.2vw,32px)/1.15 var(--f-display);letter-spacing:-.005em}
+.lede{color:var(--ink-2);max-width:62ch;font-size:14.5px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px;min-width:0}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;margin-bottom:14px}
+h2{font:600 16px/1.3 var(--f-ui)}
+.meta{font-size:12.5px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px}
+.c8{grid-column:span 8}.c4{grid-column:span 4}.c7{grid-column:span 7}.c5{grid-column:span 5}
+@media (max-width:960px){.c8,.c4,.c7,.c5{grid-column:1/-1}}
+.btn{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:6px;padding:8px 14px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding:3px 6px;font-size:13px}
+.btn.ghost:hover{background:var(--accent-soft)}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 12px/1 var(--f-ui);padding:5px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.info{background:var(--surface-2);color:var(--ink-2)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+.u{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.us{display:flex;flex-wrap:wrap;gap:4px 10px}
+
+/* Pilotage */
+.event{display:flex;gap:12px 18px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-soft)}
+.event.done{border-color:var(--line);background:var(--surface)}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--crit);flex:none;animation:pulse 1.8s infinite}
+.event.done .pulse{background:var(--ok);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 50%,transparent)}70%{box-shadow:0 0 0 10px color-mix(in srgb,var(--crit) 0%,transparent)}100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 0%,transparent)}}
+.ev-body{flex:1 1 320px;min-width:0}
+.ev-meta{font:500 12px/1.3 var(--f-mono);color:var(--ink-2);margin-bottom:3px}
+.ev-title{font-weight:600;font-size:16px}
+.ev-sub{color:var(--ink-2);font-size:13.5px;margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.stat{padding:14px 18px;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line);min-width:0}
+.stat:first-child{border-left:0}
+.stat-l{font-size:12.5px;color:var(--ink-2);font-weight:500}
+.stat-v{font:600 26px/1.15 var(--f-ui)}
+.stat-v small{font-size:15px;color:var(--muted);font-weight:500}
+.stat-s{font-size:12px;color:var(--muted)}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(3){border-left:0}.stat:nth-child(n+3){border-top:1px solid var(--line)}}
+.legend{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.auds{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.aud{appearance:none;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;cursor:pointer;display:grid;grid-template-columns:96px minmax(0,1fr) minmax(150px,210px);gap:8px 16px;padding:12px 10px;align-items:start}
+.aud:hover{background:var(--surface-2)}
+.aud.sel{background:var(--accent-soft)}
+.aud-date{display:flex;flex-direction:column;font-size:13px;line-height:1.35}
+.aud-date b{font-weight:600}
+.aud-name{display:flex;flex-direction:column;gap:2px;font-weight:600;font-size:14px;min-width:0}
+.aud-name span{font-weight:400;font-size:12.5px;color:var(--muted)}
+.aud-flags{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:6px}
+.flag{font-size:12px;padding:3px 8px;border-radius:4px;background:var(--surface-2);color:var(--ink-2)}
+.flag.crit{background:var(--crit-soft);color:var(--crit)}
+.flag.warn{background:var(--warn-soft);color:var(--warn)}
+.rb-wrap{display:flex;flex-direction:column;gap:6px;padding-top:3px}
+.rb{display:flex;gap:2px;height:10px}
+.rb i{display:block;border-radius:4px;min-width:4px}
+.rb .ok,.legend .ok{background:var(--ok)}
+.rb .warn,.legend .warn{background:var(--warn)}
+.rb .crit,.legend .crit{background:var(--crit)}
+.rb-t{font-size:12px;color:var(--ink-2)}
+@media (max-width:620px){.aud{grid-template-columns:1fr}.aud-flags{grid-column:1}}
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-weight:600;font-size:12px;color:var(--ink-2);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.mx{min-width:860px}
+.who{font-weight:600}
+.cell{appearance:none;border:0;display:inline-flex;align-items:center;gap:5px;font:500 12px/1 var(--f-ui);padding:5px 8px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.cell.ok{background:var(--ok-soft);color:var(--ok)}
+.cell.todo{background:var(--warn-soft);color:var(--warn)}
+.cell.ko{background:var(--crit-soft);color:var(--crit)}
+.cell.na{background:none;color:var(--muted)}
+.cell.on{box-shadow:0 0 0 2px var(--ink)}
+.cell b{font-weight:700}
+.mx-detail{margin-top:12px;padding:10px 12px;border-radius:6px;background:var(--surface-2);font-size:13px;color:var(--ink-2);min-height:42px}
+.mx-detail b{color:var(--ink)}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:4px 10px;align-items:center}
+.bar-l{grid-column:1/-1;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.bar-l span{color:var(--muted);font-size:12px}
+.bar-t{display:flex;gap:2px;height:10px;background:var(--surface-2);border-radius:4px}
+.bar-f{background:var(--accent);border-radius:4px}
+.bar-n{background:var(--accent);opacity:.45;border-radius:4px}
+.bar-v{font:600 13px/1 var(--f-mono);text-align:right}
+.bar-v em{font-style:normal;color:var(--accent);font-weight:500}
+.fine{font-size:12.5px;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+
+/* Affaire */
+.people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.person{padding:14px 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:3px;min-width:0}
+.person:first-child{border-left:0}
+.role{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.pname{font:600 18px/1.25 var(--f-display)}
+.pdet{font-size:13px;color:var(--ink-2)}
+@media (max-width:760px){.people{grid-template-columns:1fr}.person{border-left:0;border-top:1px solid var(--line)}.person:first-child{border-top:0}}
+.evc{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:6px;background:var(--surface-2)}
+.evc-t{font-weight:600;font-size:15px}
+.evc-d{display:flex;gap:6px 16px;align-items:baseline;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.evc-d .big{font-size:22px;font-weight:500;color:var(--ink)}
+.hint{font-size:13.5px;color:var(--ink-2);margin-top:12px}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.steps{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column}
+.step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding-bottom:14px;position:relative}
+.step:not(:last-child)::before{content:"";position:absolute;left:13px;top:30px;bottom:2px;width:2px;background:var(--line)}
+.step-n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 12px/1 var(--f-mono);background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.step.done .step-n{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.step.run .step-n{border:2px solid var(--accent);color:var(--accent);animation:blink 1s infinite}
+.step.wait{opacity:.5}
+.step.guard.done .step-n{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+@keyframes blink{50%{opacity:.4}}
+.step-t{font-weight:600;font-size:14px;padding-top:4px}
+.step-d{font-size:13px;color:var(--ink-2);margin-top:2px}
+.rules{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
+.rules li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;font-size:12.5px;color:var(--ink-2)}
+.rid{font:500 11.5px/1.6 var(--f-mono);color:var(--accent)}
+.procs{display:flex;flex-direction:column;gap:10px}
+.proc{border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+.proc-h{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.proc-r{font:12px/1.4 var(--f-mono);color:var(--ink-2)}
+.proc-s{font-size:13px;color:var(--ink-2)}
+.proc-i{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:4px}
+
+/* Timeline */
+.tl-scroll{overflow-x:auto;padding-bottom:4px}
+.tl{min-width:900px}
+.tl-axis{display:grid;grid-template-columns:var(--lw) minmax(0,1fr)}
+.ticks{position:relative;height:24px;border-bottom:1px solid var(--line-2)}
+.tick{position:absolute;top:0;height:24px;border-left:1px solid var(--line);padding-left:5px;font:500 11px/24px var(--f-mono);color:var(--muted)}
+.tl-body{position:relative}
+.lane{display:grid;grid-template-columns:var(--lw) minmax(0,1fr);min-height:96px;border-bottom:1px solid var(--line)}
+.lane-l{padding:10px 12px 10px 0;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.lane-n{display:flex;align-items:center;gap:7px;font-weight:600;font-size:13.5px}
+.lane-s{font-size:11.5px;color:var(--muted)}
+.lane-i{font-size:12px;color:var(--accent);font-weight:600}
+.lane-t{position:relative}
+.zone{position:absolute;top:0;bottom:0;right:0;background:var(--accent-soft)}
+.span{position:absolute;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:var(--c);opacity:.3}
+.beyond{position:absolute;right:6px;top:calc(50% + 8px);font-size:10.5px;color:var(--muted)}
+.ev{position:absolute;top:50%;width:0;height:0;padding:0;border:0;background:none;cursor:pointer;z-index:2}
+.dot{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--surface)}
+.ev.key .dot{left:-9px;top:-9px;width:18px;height:18px;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--c)}
+.ev.sel .dot{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.ev:focus-visible{outline:none}
+.ev:focus-visible .dot{outline:2px solid var(--accent);outline-offset:4px}
+.ev-l{position:absolute;display:flex;flex-direction:column;gap:1px;font-size:12px;line-height:1.25;white-space:nowrap;background:var(--surface);padding:2px 5px;border-radius:3px;color:var(--ink);text-align:left}
+.ev-l .mono{font-size:10.5px;color:var(--muted)}
+.ev-l.up{bottom:13px}
+.ev-l.down{top:13px}
+.ev-l.c{left:0;transform:translateX(-50%);align-items:center;text-align:center}
+.ev-l.s{left:-6px}
+.ev-l.e{right:-6px;align-items:flex-end;text-align:right}
+.ev.key .ev-l{font-weight:600}
+.ev.key .ev-l.up{bottom:16px}
+.overlay{position:absolute;top:0;bottom:0;left:var(--lw);right:0;pointer-events:none;z-index:1}
+.today{position:absolute;top:0;bottom:0;border-left:1.5px solid var(--accent)}
+.impact{position:absolute;top:48px;bottom:0;border-left:2px dashed var(--p-penal)}
+.tl-foot{display:grid;grid-template-columns:var(--lw) minmax(0,1fr)}
+.tl-foot .ticks{border:0}
+.today-tag{position:absolute;top:4px;transform:translateX(-50%);font:600 11px/1 var(--f-mono);color:var(--accent);background:var(--accent-soft);padding:4px 6px;border-radius:4px;white-space:nowrap}
+.tl-detail{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 24px;padding:12px 14px;border-radius:6px;background:var(--surface-2);font-size:13px}
+.tl-detail h3{grid-column:1/-1;font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.tl-detail p{color:var(--ink-2)}
+@media (max-width:760px){.tl-detail{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 12px;margin:0}
+.kv dt{color:var(--muted);font-size:12.5px}
+.kv dd{margin:0;min-width:0}
+.prov{min-width:960px}
+.prov td{vertical-align:top;padding-block:10px}
+.prov td:first-child{font-weight:600;width:190px}
+.chipline{margin-top:5px}
+.reuse{margin-top:8px;padding:10px 12px;border:1px dashed var(--accent);border-radius:6px;background:var(--accent-soft);font-size:12.5px;display:flex;flex-direction:column;gap:8px;max-width:420px}
+.reuse-b{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Actions */
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{appearance:none;border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.agroups{display:flex;flex-direction:column;gap:18px}
+.agroup{display:flex;flex-direction:column;gap:8px}
+.agroup h3{font:600 12px/1.2 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.act{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.act.isnew{border-color:var(--accent)}
+.act-h{appearance:none;background:none;border:0;width:100%;text-align:left;cursor:pointer;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px 16px;border-radius:8px}
+.act-ic{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);margin-top:1px;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--surface)}
+.act.done .act-ic{background:var(--ok);border-color:var(--ok)}
+.act.validation .act-ic{border-color:var(--warn)}
+.act-t{font-weight:600;font-size:14.5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.act.done .act-t{color:var(--muted)}
+.act-m{font-size:12.5px;color:var(--ink-2);margin-top:3px;display:flex;flex-wrap:wrap;gap:2px 14px}
+.new{font:600 10.5px/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:4px 6px;border-radius:4px}
+.act-d{padding:0 16px 16px 50px;display:flex;flex-direction:column;gap:12px;font-size:13.5px}
+.act-d .kv{grid-template-columns:140px minmax(0,1fr)}
+.limit{font-size:12.5px;color:var(--ok);background:var(--ok-soft);padding:8px 10px;border-radius:6px}
+@media (max-width:620px){
+  .act-h{grid-template-columns:22px minmax(0,1fr)}
+  .act-h .pill{grid-column:2;justify-self:start}
+  .act-d{padding-left:16px}
+  .kv,.act-d .kv{grid-template-columns:1fr}
+  .kv dd{margin-bottom:6px}
+}
+.draft{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.draft{grid-template-columns:1fr}}
+.letter-h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:6px}
+.letter{width:100%;min-height:300px;resize:vertical;font:15px/1.6 var(--f-display);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.checks{display:flex;flex-direction:column;gap:8px}
+.checks h4{font:600 12px/1.2 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.chk{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;align-items:start;font-size:13px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.chk input{margin:2px 0 0;width:16px;height:16px;accent-color:var(--accent)}
+.chk small{display:block;color:var(--muted);font:11.5px/1.45 var(--f-mono);margin-top:3px}
+.validated{padding:10px 12px;border-radius:6px;background:var(--ok-soft);color:var(--ok);font-size:13px;font-weight:500}
+.journal{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
+.journal li{display:grid;grid-template-columns:52px 170px minmax(0,1fr);gap:2px 14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.journal li:last-child{border-bottom:0}
+.j-who{font-weight:600}
+.j-who.sys{color:var(--accent)}
+.j-what span{display:block;color:var(--muted);font:11.5px/1.5 var(--f-mono)}
+@media (max-width:620px){.journal li{grid-template-columns:52px minmax(0,1fr)}.journal .j-what{grid-column:1/-1}}
+
+/* Vigilance */
+.notice{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.notice b{color:var(--ink)}
+.vlist{display:flex;flex-direction:column;gap:14px}
+.vcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.v-h{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
+.v-id{font:500 12px/1 var(--f-mono);color:var(--muted)}
+.v-t{font-weight:600;font-size:15.5px;flex:1 1 280px}
+.v-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px}
+@media (max-width:860px){.v-body{grid-template-columns:1fr}}
+.srcs{display:flex;flex-direction:column;gap:8px}
+.src{border:1px solid var(--line);border-radius:6px;padding:9px 12px;background:var(--surface-2)}
+.src-h{font:500 11.5px/1.45 var(--f-mono);color:var(--ink-2);display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap}
+.src-h button{appearance:none;border:0;background:none;color:var(--accent);font:500 12px/1.45 var(--f-ui);cursor:pointer;padding:0}
+.src-v{font-size:13.5px;margin-top:3px}
+.src.diff{border-color:var(--crit)}
+.src.diff .src-v{color:var(--crit);font-weight:500}
+.v-side h4{font:600 12px/1.2 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.v-side ul{margin:0 0 14px;padding-left:18px;font-size:13.5px;display:flex;flex-direction:column;gap:4px}
+.v-side p{font-size:13.5px;color:var(--ink-2);margin-bottom:14px}
+.v-f{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+.v-f .note{font-size:12px;color:var(--muted);margin-left:auto}
+.vcard.verified{background:var(--bg)}
+.vdone{font-size:13px;color:var(--ink-2)}
+select{font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);max-width:100%}
+
+/* Architecture */
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+@media (max-width:860px){.trio{grid-template-columns:1fr}}
+.trio .who{font:500 12px/1.2 var(--f-mono);color:var(--accent);margin-bottom:6px}
+.trio h2{font:600 20px/1.25 var(--f-display);margin-bottom:10px}
+.trio ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:5px}
+.layers{display:flex;flex-direction:column}
+.layer{display:grid;grid-template-columns:210px minmax(0,1fr);gap:8px 20px;padding:14px 0;border-bottom:1px solid var(--line)}
+.layer:last-child{border-bottom:0}
+.layer-n{font-weight:600;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.layer-n span{font-weight:400;font-size:12.5px;color:var(--muted)}
+.techs{display:flex;flex-wrap:wrap;gap:8px}
+.tech{border:1px solid var(--line-2);border-radius:6px;padding:7px 10px;background:var(--surface);display:flex;flex-direction:column;gap:1px;min-width:0}
+.tech b{font-weight:600;font-size:13px}
+.tech span{font-size:12px;color:var(--muted)}
+.tech.src{background:var(--surface-2);border-style:dashed}
+@media (max-width:760px){.layer{grid-template-columns:1fr}}
+.law{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px}
+.law li{font-size:13.5px;color:var(--ink-2)}
+.law b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
+@media (max-width:760px){.law{grid-template-columns:1fr}}
+
+.foot{padding-block:4px 32px;font-size:12.5px;color:var(--muted);display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;align-items:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow);z-index:50;width:max-content;max-width:calc(100vw - 32px)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="topbar">
+  <div class="wrap tb-in">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="6" fill="var(--accent)"></rect><path d="M5.5 14c2.6-4.2 5.4-6.3 8.5-6.3s5.9 2.1 8.5 6.3c-2.6 4.2-5.4 6.3-8.5 6.3S8.1 18.2 5.5 14z" fill="none" stroke="var(--accent-ink)" stroke-width="1.8"></path><circle cx="14" cy="14" r="2.7" fill="var(--accent-ink)"></circle></svg>
+      <div class="brand-t"><span class="brand-n">Vigie</span><span class="brand-s">Tour de contrôle procédurale</span></div>
+    </div>
+    <div class="tb-ctx">
+      <span class="demo">Démo · données fictives</span>
+      <span>Tribunal judiciaire de Valmont</span>
+      <span class="mono" id="clock"></span>
+      <span class="user"><span class="avatar" aria-hidden="true">CL</span>Claire L., greffière</span>
+    </div>
+  </div>
+  <div class="wrap">
+    <nav class="tabs" role="tablist" aria-label="Vues">
+      <button role="tab" id="t-pilotage" data-tab="pilotage" aria-selected="true">Pilotage</button>
+      <button role="tab" id="t-affaire" data-tab="affaire" aria-selected="false">Affaire R. / M.<span class="count hot" id="n-affaire"></span></button>
+      <button role="tab" id="t-actions" data-tab="actions" aria-selected="false">Actions<span class="count" id="n-actions"></span></button>
+      <button role="tab" id="t-vigilance" data-tab="vigilance" aria-selected="false">Vigilance<span class="count" id="n-vig"></span></button>
+      <button role="tab" id="t-archi" data-tab="archi" aria-selected="false">Architecture</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap main">
+
+  <!-- PILOTAGE -->
+  <section class="view" id="v-pilotage" role="tabpanel" aria-labelledby="t-pilotage">
+    <div class="view-head">
+      <div><p class="eyebrow">Pilotage du greffe</p><h1>Préparation des audiences du 20 octobre au 5 novembre</h1></div>
+      <p class="lede">État objectif de préparation administrative. Vigie ne note pas les affaires et ne les classe pas : l’ordre de passage et le maintien de chaque audience restent décidés par le président.</p>
+    </div>
+    <div id="evt-banner"></div>
+    <div class="stats" id="stats"></div>
+    <div class="grid">
+      <div class="panel c8">
+        <div class="panel-h">
+          <h2>Audiences à venir</h2>
+          <div class="legend"><span><i class="ok"></i>prêtes</span><span><i class="warn"></i>à compléter</span><span><i class="crit"></i>difficulté en attente</span></div>
+        </div>
+        <div class="auds" id="auds"></div>
+      </div>
+      <div class="panel c4">
+        <div class="panel-h"><h2>Actions ouvertes par service</h2></div>
+        <div class="bars" id="charge"></div>
+        <p class="fine">Charge mesurée par service et par file d’actions. Vigie ne mesure pas l’activité individuelle des agents ni des magistrats.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2 id="mx-title"></h2><span class="meta">Cliquez une case pour voir d’où vient l’information</span></div>
+      <div class="tbl-scroll"><table class="mx" id="mx"></table></div>
+      <div class="mx-detail" id="mx-detail"></div>
+    </div>
+  </section>
+
+  <!-- AFFAIRE -->
+  <section class="view" id="v-affaire" role="tabpanel" aria-labelledby="t-affaire" hidden>
+    <div class="view-head">
+      <div><p class="eyebrow">Situation liée · violences intrafamiliales</p><h1>Affaire R. / M., quatre procédures liées</h1></div>
+      <p class="lede">Vigie relie les dossiers ouverts dans des applications différentes. Chaque information affichée renvoie au document et au système dont elle provient.</p>
+    </div>
+    <div class="people">
+      <div class="person"><span class="role">Mis en cause</span><span class="pname">M. Julien R.</span><span class="pdet">Détenu au centre pénitentiaire de Valmont, écrou n° 24871. Avocat : Me Paul D.</span></div>
+      <div class="person"><span class="role">Victime · partie civile</span><span class="pname">Mme Sophie M.</span><span class="pdet">Domicile dissimulé, domicile élu chez son avocate, Me Anne V.</span></div>
+      <div class="person"><span class="role">Enfants mineurs</span><span class="pname">L., 7 ans · T., 4 ans</span><span class="pdet">AEMO en cours. Droit de visite du père en lieu médiatisé.</span></div>
+    </div>
+    <div class="grid">
+      <div class="panel c7" id="evt-card"></div>
+      <div class="panel c5">
+        <div class="panel-h"><h2>Procédures liées</h2><span class="meta">4 dossiers · 3 applications</span></div>
+        <div class="procs" id="procs"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Chronologie commune</h2><span class="meta">Année 2026 · cliquez un événement pour voir sa source</span></div>
+      <div class="tl-scroll"><div class="tl" id="tl"></div></div>
+      <div id="tl-detail"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Une donnée saisie une fois, tracée partout</h2><span class="meta">Valeur · source · auteur · version</span></div>
+      <div class="tbl-scroll"><table class="prov" id="prov"></table></div>
+    </div>
+  </section>
+
+  <!-- ACTIONS -->
+  <section class="view" id="v-actions" role="tabpanel" aria-labelledby="t-actions" hidden>
+    <div class="view-head">
+      <div><p class="eyebrow">Agenda d’actions</p><h1>Qui vérifie quoi, avant quand, à partir de quelle information</h1></div>
+      <p class="lede">Chaque action indique son responsable, son échéance, la règle qui l’a créée et la source qui l’a déclenchée. Les projets de notification attendent toujours une validation humaine.</p>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="agroups" id="agroups"></div>
+    <div class="panel">
+      <div class="panel-h"><h2>Journal de traçabilité</h2><span class="meta">Aujourd’hui, du plus récent au plus ancien</span></div>
+      <ul class="journal" id="journal"></ul>
+    </div>
+  </section>
+
+  <!-- VIGILANCE -->
+  <section class="view" id="v-vigilance" role="tabpanel" aria-labelledby="t-vigilance" hidden>
+    <div class="view-head">
+      <div><p class="eyebrow">Vigilance procédurale</p><h1>Ce qui pourrait poser difficulté, et où le vérifier</h1></div>
+      <p class="lede">Vigie repère les anomalies qui peuvent mener à une régularisation, un renvoi ou un débat sur la régularité d’un acte. Elle montre les sources et les vérifications à faire.</p>
+    </div>
+    <div class="notice"><span class="pill acc">Règle de conduite</span><span><b>Vigie ne déclare jamais un acte nul ni une procédure irrecevable.</b> La qualification juridique appartient au professionnel, qui confirme chaque vérification avec un motif.</span></div>
+    <div class="vlist" id="vlist"></div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section class="view" id="v-archi" role="tabpanel" aria-labelledby="t-archi" hidden>
+    <div class="view-head">
+      <div><p class="eyebrow">Sous le capot</p><h1>L’IA lit, les règles encadrent, le professionnel décide</h1></div>
+      <p class="lede">Vigie ne remplace aucune application du tribunal. Elle se branche sur celles qui existent, conserve la trace de chaque donnée et ne propose que des actions prévues par des règles écrites avec les greffes et les magistrats.</p>
+    </div>
+    <div class="trio">
+      <div class="panel"><p class="who">Intelligence artificielle</p><h2>Lire et expliquer</h2><ul><li>Lit les actes et pièces : OCR, extraction des dates, identités, références et cotes</li><li>Reconstruit la chronologie de chaque procédure</li><li>Compare les versions d’un même document et repère les divergences</li><li>Rédige l’explication de chaque alerte, avec ses sources</li></ul></div>
+      <div class="panel"><p class="who">Moteur de règles</p><h2>Encadrer</h2><ul><li>Règles versionnées, écrites et validées avec les juridictions</li><li>Seules les actions prévues par une règle peuvent être proposées</li><li>Chaque proposition cite sa règle, sa source et son destinataire</li><li>Toute analyse peut être rejouée et auditée</li></ul></div>
+      <div class="panel"><p class="who">Professionnels</p><h2>Décider</h2><ul><li>Valident, modifient ou écartent chaque projet</li><li>Aucune notification sans validation humaine</li><li>Aucune mesure modifiée automatiquement</li><li>L’ordre et le maintien des audiences restent décidés par le président</li></ul></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Architecture Microsoft proposée</h2><span class="meta">Dans la démo, les connecteurs sont simulés</span></div>
+      <div class="layers">
+        <div class="layer"><div class="layer-n">Sources existantes<span>Rien n’est ressaisi</span></div><div class="techs"><div class="tech src"><b>Cassiopée</b><span>chaîne pénale</span></div><div class="tech src"><b>WinCI TGI</b><span>civil, JAF</span></div><div class="tech src"><b>WinEURS</b><span>mineurs</span></div><div class="tech src"><b>APPI</b><span>application des peines</span></div><div class="tech src"><b>GENESIS</b><span>détention</span></div><div class="tech src"><b>RPVA</b><span>avocats</span></div><div class="tech src"><b>Outlook</b><span>agendas</span></div></div></div>
+        <div class="layer"><div class="layer-n">1 · Connecter<span>Lire sans dupliquer</span></div><div class="techs"><div class="tech"><b>Azure API Management</b><span>exposer les applications métier</span></div><div class="tech"><b>Azure Logic Apps</b><span>connecteurs et synchronisation</span></div><div class="tech"><b>Azure Event Grid</b><span>événements : sortie de détention, dépôt de pièce</span></div></div></div>
+        <div class="layer"><div class="layer-n">2 · Comprendre<span>IA documentaire</span></div><div class="techs"><div class="tech"><b>Azure AI Document Intelligence</b><span>OCR et extraction de champs</span></div><div class="tech"><b>Azure OpenAI · AI Foundry</b><span>chronologies, divergences, explications</span></div><div class="tech"><b>Azure AI Search</b><span>retrouver une donnée déjà saisie ailleurs</span></div></div></div>
+        <div class="layer"><div class="layer-n">3 · Tracer<span>Registre de données sourcées</span></div><div class="techs"><div class="tech"><b>Microsoft Dataverse</b><span>valeur, source, auteur, version</span></div><div class="tech"><b>Microsoft Purview</b><span>lignage et classification des données sensibles</span></div></div></div>
+        <div class="layer"><div class="layer-n">4 · Agir<span>Sous contrôle humain</span></div><div class="techs"><div class="tech"><b>Power Automate</b><span>règles et flux d’actions</span></div><div class="tech"><b>Approvals dans Teams</b><span>validation humaine horodatée</span></div></div></div>
+        <div class="layer"><div class="layer-n">5 · Afficher<span>Par rôle</span></div><div class="techs"><div class="tech"><b>Power Apps</b><span>timeline et agenda d’actions</span></div><div class="tech"><b>Power BI</b><span>pilotage des audiences et des services</span></div><div class="tech"><b>Copilot Studio</b><span>agent Teams : « où en est le dossier 26/01177 ? »</span></div></div></div>
+        <div class="layer"><div class="layer-n">Transverse<span>Sécurité</span></div><div class="techs"><div class="tech"><b>Microsoft Entra ID</b><span>habilitations par service, cloisonnement pénal, civil, mineurs</span></div><div class="tech"><b>Journal d’audit</b><span>chaque lecture et chaque action horodatées</span></div></div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Garde-fous juridiques intégrés</h2></div>
+      <ul class="law">
+        <li><b>Pas de décision automatisée</b>Aucune décision produisant des effets juridiques n’est prise sur le seul fondement d’un traitement automatisé (art. 22 RGPD, art. 47 loi Informatique et libertés).</li>
+        <li><b>Données pénales et violences intrafamiliales</b>Traitements relevant de la directive (UE) 2016/680 : minimisation, accès par habilitation, coordonnées protégées masquées par défaut.</li>
+        <li><b>AI Act</b>L’aide à l’interprétation des faits et du droit par une autorité judiciaire est classée à haut risque (annexe III). Vigie s’en tient à la préparation administrative, sous contrôle humain et avec journalisation ; la qualification exacte du système reste à confirmer.</li>
+        <li><b>Pas d’évaluation des personnes</b>Le pilotage mesure la charge des services et des files d’actions. Il ne classe ni les affaires ni les agents et ne mesure pas l’activité individuelle des magistrats et des greffiers.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span>Prototype de hackathon. Personnes, affaires et adresses fictives ; connecteurs simulés.</span>
+  <button class="btn sm" data-reset>Réinitialiser la démo</button>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const JOURS=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+const D=iso=>new Date(iso.slice(0,10)+'T12:00:00');
+const fDay=iso=>{const d=D(iso);return `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`};
+const fNum=iso=>{const d=D(iso);return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`};
+const hhmm=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+
+/* ---------- Données fictives ---------- */
+const PROC={
+  penal:{n:'Pénal',c:'var(--p-penal)'},
+  op:{n:'Ordonnance de protection',c:'var(--p-op)'},
+  je:{n:'Assistance éducative',c:'var(--p-je)'},
+  jaf:{n:'Divorce',c:'var(--p-jaf)'}
+};
+const uChip=k=>`<span class="u"><i class="sw" style="--c:${PROC[k].c}"></i>${PROC[k].n}</span>`;
+
+const OKD={conv:'Accusé de réception signé, reçu au greffe.',pieces:'Toutes les pièces annoncées au bordereau sont présentes.',notif:'Notification vérifiée.'};
+const R=(ref,who,cells={},link)=>({ref,who,cells,link});
+const fill=list=>list.map(([r,w])=>R(r,w));
+const AUD=[
+ {id:'a1',date:'2026-10-20T14:00',label:'Tribunal correctionnel, audience collégiale',room:'Salle 2',n:8,ready:4,todo:3,blocked:1,
+  flags:[['warn','1 extraction à organiser'],['warn','1 visio à confirmer'],['crit','1 nullité soulevée, à examiner']],
+  rows:[
+   R('26/091/0017','K.',{detenu:['todo','Extraction','Détenu au CP de Valmont (GENESIS). Demande d’extraction non encore transmise.'],interp:['ok','Arabe','Interprète confirmé le 12/10 (agenda Outlook du service).']}),
+   R('26/077/0008','P.',{detenu:['todo','Visio','Comparution par visioconférence demandée ; créneau du CP non confirmé.']}),
+   R('26/104/0033','B.',{conv:['todo','PV attendu','Citation par commissaire de justice du 02/10 : procès-verbal non encore reçu au greffe.']}),
+   R('25/311/0090','L.',{diff:['ko','Nullité soulevée','Conclusions de Me H. du 12/10 (RPVA) soulevant la nullité de la garde à vue. Question à trancher par la juridiction : Vigie la signale sans la qualifier.']}),
+   ...fill([['26/112/0051','S.'],['26/098/0024','M.'],['25/287/0142','D.'],['26/120/0006','A.']])
+  ]},
+ {id:'a2',date:'2026-10-22T09:00',label:'Juge aux affaires familiales, cabinet 3',room:'Cabinet 3',n:12,ready:9,todo:3,blocked:0,
+  flags:[['warn','2 pièces annoncées absentes'],['warn','1 AR en attente']],
+  rows:[
+   R('RG 26/00931','T. / T.',{pieces:['todo','Pièce absente','Bordereau de Me F. : pièce n°7 (avis d’imposition 2025) non reçue.']}),
+   R('RG 26/01012','G. / N.',{pieces:['todo','Pièce absente','Bordereau de Me C. : pièce n°3 (attestation CAF) non reçue.']}),
+   R('RG 26/00874','H. / H.',{conv:['todo','AR attendu','Avis d’audience envoyé en LRAR le 25/09 : accusé de réception non retourné.']}),
+   ...fill([['RG 26/00902','B. / B.'],['RG 26/00915','L. / K.'],['RG 26/00947','P. / F.'],['RG 26/00958','M. / M.'],['RG 26/00966','D. / S.'],['RG 26/00980','A. / F.'],['RG 26/00993','J. / J.'],['RG 26/01004','C. / V.'],['RG 26/01021','N. / G.']])
+  ]},
+ {id:'a3',date:'2026-10-28T09:30',label:'Juge des libertés et de la détention',room:'Cabinet JLD',n:4,ready:2,todo:1,blocked:1,
+  flags:[['warn','1 visio à confirmer'],['crit','Interprète introuvable']],
+  rows:[
+   R('26/131/0002','O.',{detenu:['todo','Visio','Visioconférence avec le CP de Valmont : salle non réservée.']}),
+   R('26/129/0011','E.',{detenu:['ok','Extraction','Extraction confirmée le 14/10.'],interp:['ko','Tigrinya','Aucun interprète disponible sur la liste de la cour d’appel ; recherche élargie en cours.']}),
+   ...fill([['26/133/0004','Z.'],['26/127/0019','W.']])
+  ]},
+ {id:'a4',date:'2026-11-03T14:00',label:'Juge des enfants, cabinet 2',room:'Cabinet 2',n:7,ready:5,todo:1,blocked:1,
+  flags:[['crit','Parent détenu convoqué à son ancien domicile'],['warn','2 versions d’un rapport']],
+  rows:[
+   R('25/0331','R. (L. et T.)',{conv:['ko','Ancien domicile','Convocation du père envoyée le 18/09 au 12 rue des Tilleuls alors qu’il est détenu depuis le 12/01 (GENESIS). AR non retourné. Voir V-02.'],pieces:['todo','2 versions','Rapport éducatif : v1 du 01/10 mise à disposition, v2 du 08/10 non mise à disposition. Voir V-05.'],detenu:['todo','Libéré le 29/10','Libération prévisionnelle le 29/10 (GENESIS) : comparution libre probable, adresse à confirmer.']},true),
+   R('26/0057','F.',{notif:['todo','Avis à confirmer','Avis d’audience au service éducatif non confirmé.']}),
+   ...fill([['25/0298','B.'],['26/0012','K.'],['26/0034','S.'],['26/0061','L.'],['26/0072','M.']])
+  ]},
+ {id:'a5',date:'2026-11-05T09:00',label:'JAF, orientation et mesures provisoires',room:'Salle 4',n:10,ready:7,todo:2,blocked:1,
+  flags:[['crit','Adresse protégée exposée'],['warn','1 pièce absente'],['warn','Une partie libérée le 29/10']],
+  rows:[
+   R('RG 26/01177','R. / M.',{conv:['ok','Signifiée','Assignation signifiée le 10/06 à l’établissement pénitentiaire (procès-verbal du commissaire de justice).'],pieces:['todo','Pièce n°14','Bordereau de Me V. du 01/10 : pièce n°14 (certificat médical du 02/09) absente. Voir V-04.'],detenu:['todo','Libéré le 29/10','M. R. sera libre à la date d’audience : adresse de notification à mettre à jour.'],diff:['ko','Adresse protégée','L’ordonnance de protection autorise Mme M. à dissimuler son domicile, mais sa nouvelle adresse figure en clair dans la fiche partie du dossier. Voir V-01.']},true),
+   R('RG 26/01203','C. / P.',{notif:['todo','Signification','Signification de l’ordonnance précédente non justifiée au dossier.']}),
+   R('RG 26/01090','V. / L.',{pieces:['todo','Pièce absente','Bordereau de Me G. : pièce n°5 non reçue.']}),
+   ...fill([['RG 26/01105','T. / A.'],['RG 26/01118','E. / E.'],['RG 26/01126','G. / H.'],['RG 26/01140','K. / D.'],['RG 26/01152','P. / P.'],['RG 26/01161','I. / C.'],['RG 26/01189','O. / M.']])
+  ]}
+];
+const COLS=[['conv','Convocations'],['pieces','Pièces'],['notif','Notification'],['detenu','Détenu'],['interp','Interprète'],['diff','Difficulté procédurale']];
+const SYM={ok:'✓',todo:'◷',ko:'!',na:''};
+const cellOf=(row,k)=>row.cells[k]||(['conv','pieces','notif'].includes(k)?['ok','OK',OKD[k]]:['na','—','Sans objet pour cette affaire.']);
+const rank=row=>{const v=COLS.map(([k])=>cellOf(row,k)[0]);return v.includes('ko')?0:v.includes('todo')?1:2};
+
+const STEPS=[
+ {t:'Lecture de l’événement',d:'GENESIS, fiche d’écrou n° 24871 (v4), saisie par le greffe pénitentiaire du CP de Valmont à 09:42. Date de libération prévisionnelle : 29/10/2026.'},
+ {t:'Rapprochement d’identité',d:'4 dossiers retrouvés par nom, prénoms, date de naissance et numéro d’écrou. Une divergence de date de naissance est renvoyée en vigilance (V-03) sans bloquer le rapprochement.'},
+ {t:'Règles applicables',d:'Moteur de règles, version 2026.10 :',rules:true},
+ {t:'Actions proposées',d:'6 actions créées dans l’agenda, chacune avec son responsable, son échéance et sa source. Le projet d’avis à la victime attend une validation humaine.'},
+ {t:'Ce que Vigie n’a pas fait',d:'Aucun envoi, aucune mesure modifiée, aucun contact avec la victime ni avec les enfants.',guard:true}
+];
+const RULES=[
+ ['R-VIF-01','Libération d’une personne condamnée pour violences conjugales : vérifier si la victime a demandé à être informée, préparer l’avis, le soumettre à validation.'],
+ ['R-OP-02','Libération d’une partie visée par une ordonnance de protection en cours : informer le parquet et le JAF, vérifier la cohérence des interdictions de contact.'],
+ ['R-JE-03','Changement de situation d’un parent titulaire d’un droit de visite médiatisé : tâche d’examen pour le juge des enfants. Aucune mesure n’est modifiée.'],
+ ['R-CIV-04','Changement d’adresse d’une partie détenue : mettre à jour les adresses de notification. Une adresse protégée n’est jamais réutilisée.'],
+ ['R-EXE-05','Libération avec sursis probatoire : convocation de prise en charge par le SPIP.']
+];
+const PROCS=[
+ {k:'penal',sys:'Cassiopée · APPI',ref:'Parquet n° 25/118/0042',s:'Jugement du 14/01/2026 : 18 mois dont 6 avec sursis probatoire, interdiction de contact.',i:'Avis à la victime · prise en charge SPIP'},
+ {k:'op',sys:'WinCI TGI',ref:'RG 26/00412',s:'Délivrée le 05/05/2026 pour 12 mois. Domicile de la victime dissimulé.',i:'Examen des mesures de protection par le parquet'},
+ {k:'je',sys:'WinEURS',ref:'Dossier 25/0331 · cabinet 2',s:'AEMO. Droit de visite du père en lieu médiatisé, suspendu de fait.',i:'Examen du droit de visite par le juge des enfants'},
+ {k:'jaf',sys:'WinCI TGI',ref:'RG 26/01177',s:'Audience d’orientation le 05/11/2026.',i:'Information du JAF · adresses à mettre à jour'}
+];
+const LANES=['penal','op','je','jaf'];
+const LANE_SYS={penal:'Cassiopée · APPI · GENESIS',op:'WinCI TGI',je:'WinEURS',jaf:'WinCI TGI · RPVA'};
+const SPANS=[
+ {lane:'penal',from:'2026-01-12',to:'2026-10-29',t:'Détention du 12/01 au 29/10/2026'},
+ {lane:'op',from:'2026-05-05',to:'2027-05-05',t:'Ordonnance de protection en vigueur jusqu’au 05/05/2027'},
+ {lane:'je',from:'2026-02-12',to:'2027-02-12',t:'AEMO en cours'},
+ {lane:'jaf',from:'2026-06-10',to:null,t:'Procédure de divorce en cours'}
+];
+const EVENTS=[
+ {id:'e1',lane:'penal',d:'2026-01-14',s:'Jugement',pos:'up',a:'s',t:'Jugement du tribunal correctionnel',src:'Cassiopée · jugement, cote D-52',by:'Greffe correctionnel',v:'v1',more:'18 mois d’emprisonnement dont 6 avec sursis probatoire. Interdiction d’entrer en contact avec la victime pendant 2 ans. Mme M. demande à être informée de la libération (note d’audience, cote D-41).'},
+ {id:'e2',lane:'je',d:'2026-02-12',s:'Jugement AEMO',pos:'up',a:'c',t:'Jugement d’assistance éducative',src:'WinEURS · jugement du 12/02/2026',by:'Greffe des enfants',v:'v1',more:'AEMO pour 12 mois. Droit de visite du père en lieu médiatisé, suspendu de fait pendant la détention.'},
+ {id:'e3',lane:'op',d:'2026-05-05',s:'Ordonnance de protection',pos:'up',a:'c',t:'Ordonnance de protection',src:'WinCI TGI · ordonnance RG 26/00412',by:'Greffe JAF',v:'v3',more:'Interdiction de contact pour 12 mois. Mme M. est autorisée à dissimuler son domicile et à élire domicile chez son avocate, Me Anne V.'},
+ {id:'e4',lane:'jaf',d:'2026-06-10',s:'Assignation signifiée',pos:'up',a:'c',t:'Assignation en divorce',src:'RPVA · acte de Me Anne V. · PV de signification',by:'Me Anne V., commissaire de justice',v:'v1',more:'Signifiée à M. R. à l’établissement pénitentiaire.'},
+ {id:'e5',lane:'je',d:'2026-09-18',s:'Convocation au domicile',pos:'down',a:'e',t:'Convocation du père',src:'WinEURS · convocation LRAR',by:'Greffe des enfants',v:'v1',more:'Adressée au 12 rue des Tilleuls alors que M. R. est détenu. Accusé de réception non retourné. Voir V-02.'},
+ {id:'e6',lane:'je',d:'2026-10-08',s:'Rapport éducatif v2',pos:'up',a:'e',t:'Rapport du service d’AEMO, version 2',src:'WinEURS · rapport du service éducatif',by:'Service d’AEMO',v:'v2',more:'Diffère de la v1 sur trois paragraphes. Seule la v1 a été mise à disposition des parties. Voir V-05.'},
+ {id:'lib',lane:'penal',d:'2026-10-29',s:'Libération prévue',pos:'up',a:'c',key:true,t:'Libération prévisionnelle de M. R.',src:'GENESIS · fiche d’écrou n° 24871',by:'Greffe pénitentiaire, CP de Valmont',v:'v4, reçue le 15/10 à 09:42',more:'Date de fin de peine recalculée après réductions de peine. Cet événement déclenche l’analyse d’impact sur les trois autres procédures.'},
+ {id:'e7',lane:'je',d:'2026-11-03',s:'Audience JE',pos:'down',a:'s',t:'Audience du juge des enfants',src:'WinEURS · agenda du cabinet 2',by:'Greffe des enfants',v:'v1',more:'Examen de la situation des enfants L. et T.'},
+ {id:'e8',lane:'jaf',d:'2026-11-05',s:'Audience d’orientation',pos:'down',a:'c',t:'Audience d’orientation et sur mesures provisoires',src:'WinCI TGI · RG 26/01177',by:'Greffe JAF',v:'v1',more:'Première audience du divorce. M. R. sera libre à cette date.'}
+];
+
+const AVIS_TXT=`Madame,
+
+Vous avez demandé à être informée de la sortie de détention de M. Julien R., condamné par le tribunal correctionnel de Valmont le 14 janvier 2026.
+
+Sa libération est prévue le jeudi 29 octobre 2026.
+
+Le jugement lui interdit d’entrer en contact avec vous pendant deux ans. L’ordonnance de protection rendue le 5 mai 2026 reste applicable jusqu’au 5 mai 2027.
+
+Pour toute question, vous pouvez joindre votre avocate, Me Anne V., ou l’association d’aide aux victimes du tribunal.
+
+Le greffe du service de l’application des peines`;
+const AVIS_CHECKS=[
+ ['La victime a demandé à être informée','Cassiopée · note d’audience du 14/01/2026, cote D-41'],
+ ['Envoi au domicile élu chez Me Anne V.','WinCI TGI · OP RG 26/00412, v3. L’adresse de la fiche partie du divorce est exclue (V-01).'],
+ ['J’ai relu le contenu du projet','Projet préparé par Vigie, v1']
+];
+
+const NEW_ACTIONS=[
+ {id:'n1',t:'Avis à la victime : libération de M. R. le 29 octobre',svc:'Service de l’application des peines',grp:'exec',ck:'ap',due:'2026-10-20',src:'GENESIS · événement du 15/10 à 09:42',why:'Mme M. a demandé à être informée de la libération (note d’audience du 14/01/2026, cote D-41).',rule:'R-VIF-01',status:'validation',special:'avis'},
+ {id:'n2',t:'Examiner les mesures de protection à la sortie',svc:'Parquet, référent VIF',grp:'parquet',ck:'parquet',due:'2026-10-23',src:'Cassiopée 25/118/0042 · WinCI TGI RG 26/00412',why:'Interdiction de contact prononcée le 14/01 et ordonnance de protection valable jusqu’au 05/05/2027 : cohérence à vérifier. Opportunité d’un téléphone grave danger ou d’un bracelet anti-rapprochement à apprécier.',rule:'R-OP-02',status:'todo',limit:'Vigie présente les éléments. Le choix d’une mesure appartient au parquet et aux juridictions.'},
+ {id:'n3',t:'Informer le JAF de la libération avant l’audience du 5 novembre',svc:'Greffe JAF',grp:'greffe',ck:'jaf',due:'2026-10-22',src:'GENESIS · WinCI TGI RG 26/01177',why:'M. R. sera libre à la date de l’audience d’orientation. L’adresse protégée de Mme M. doit rester exclue de tout acte (V-01).',rule:'R-OP-02 · R-CIV-04',status:'todo'},
+ {id:'n4',t:'Examiner l’incidence de la libération sur le droit de visite médiatisé',svc:'Juge des enfants, cabinet 2',grp:'juges',ck:'enf',due:'2026-10-27',src:'WinEURS 25/0331 · jugement du 12/02/2026',why:'Le père bénéficie d’un droit de visite en lieu médiatisé, suspendu de fait pendant la détention. Sa reprise possible à partir du 29/10 relève de l’appréciation du juge.',rule:'R-JE-03',status:'todo',limit:'Vigie ne modifie aucune mesure et ne contacte ni les enfants ni le service éducatif.'},
+ {id:'n5',t:'Fixer la convocation de prise en charge du sursis probatoire',svc:'SPIP de Valmont',grp:'exec',ck:'ap',due:'2026-10-27',src:'APPI · jugement du 14/01/2026',why:'Peine de 18 mois dont 6 avec sursis probatoire : le suivi commence à la libération.',rule:'R-EXE-05',status:'todo'},
+ {id:'n6',t:'Recueillir l’adresse de sortie de M. R.',svc:'SPIP de Valmont',grp:'exec',ck:'ap',due:'2026-10-23',src:'Aucune source autorisée',why:'Donnée absente de GENESIS, APPI, Cassiopée, WinCI TGI et WinEURS. Une seule saisie est demandée ; elle alimentera ensuite les quatre dossiers, avec sa source.',rule:'R-CIV-04',status:'todo'}
+];
+
+const VIG=[
+ {id:'V-01',sev:'crit',sevL:'À traiter avant toute notification',t:'Adresse protégée présente en clair dans le dossier de divorce',procs:['op','jaf'],
+  srcs:[{h:'WinCI TGI · OP RG 26/00412 · v3 du 05/05/2026',v:'Mme M. est autorisée à dissimuler son domicile ; domicile élu chez Me Anne V.'},
+        {h:'WinCI TGI · divorce RG 26/01177 · fiche partie modifiée le 22/09/2026',v:'Adresse personnelle de Mme M. saisie en clair : 4 allée des •••••, Valmont',diff:true}],
+  cons:'Divulgation de l’adresse à M. R. si un avis ou une notification est produit depuis la fiche partie.',
+  checks:['Confirmer la portée de l’autorisation de dissimulation dans l’ordonnance','Remplacer l’adresse de notification par le domicile élu','Contrôler les actes émis depuis le 22/09'],
+  task:{t:'Retirer l’adresse protégée de la fiche partie (RG 26/01177)',svc:'Greffe JAF',grp:'greffe',ck:'jaf',due:'2026-10-19',src:'Vigilance V-01',why:'L’ordonnance de protection autorise la dissimulation du domicile de Mme M.',rule:'Vigilance V-01'}},
+ {id:'V-02',sev:'crit',sevL:'À traiter avant l’audience du 03/11',t:'Personne détenue convoquée à son ancien domicile',procs:['je','penal'],
+  srcs:[{h:'GENESIS · fiche d’écrou n° 24871',v:'M. R. est détenu au CP de Valmont depuis le 12/01/2026.'},
+        {h:'WinEURS · dossier 25/0331 · convocation LRAR du 18/09/2026',v:'Convocation adressée au 12 rue des Tilleuls, Valmont. Accusé de réception non retourné.',diff:true}],
+  cons:'Convocation possiblement irrégulière : renvoi de l’audience, voire débat sur la régularité de la procédure.',
+  checks:['Vérifier le mode de convocation applicable à une personne détenue','Reconvoquer à l’établissement, ou à l’adresse de sortie après le 29/10'],
+  linked:'b1'},
+ {id:'V-03',sev:'warn',sevL:'À vérifier',t:'Date de naissance divergente selon les sources',procs:['penal','jaf'],
+  srcs:[{h:'Cassiopée · fiche personne · v2',v:'03/02/1988'},
+        {h:'GENESIS · fiche d’écrou n° 24871',v:'03/02/1988'},
+        {h:'WinCI TGI · assignation en divorce du 10/06/2026, page 1',v:'03/02/1989',diff:true}],
+  cons:'Rapprochement d’identité moins sûr ; erreur matérielle possible dans l’acte.',
+  checks:['Comparer avec l’acte de naissance ou la pièce d’identité au dossier','Le cas échéant, signaler l’erreur à l’avocate rédactrice'],
+  task:{t:'Vérifier la date de naissance de M. R. dans l’assignation',svc:'Greffe JAF',grp:'greffe',ck:'jaf',due:'2026-10-28',src:'Vigilance V-03',why:'Trois sources, deux valeurs différentes.',rule:'Vigilance V-03'}},
+ {id:'V-04',sev:'warn',sevL:'À vérifier',t:'Pièce annoncée au bordereau mais absente du dossier',procs:['jaf'],
+  srcs:[{h:'RPVA · bordereau de Me Anne V. du 01/10/2026',v:'Pièce n°14 : certificat médical du 02/09/2026'},
+        {h:'Dossier numérique RG 26/01177',v:'13 pièces reçues sur 14 annoncées. Pièce n°14 introuvable.',diff:true}],
+  cons:'Pièce invoquée sans avoir été versée : demande de communication, débat sur le respect du contradictoire.',
+  checks:['Vérifier l’envoi RPVA du 01/10 (pièce jointe rejetée ?)','Demander la pièce à Me Anne V.'],
+  linked:'b2'},
+ {id:'V-05',sev:'info',sevL:'Information',t:'Deux versions du rapport éducatif',procs:['je'],
+  srcs:[{h:'WinEURS · rapport du service d’AEMO · v1 du 01/10/2026',v:'Mis à disposition des parties le 02/10.'},
+        {h:'WinEURS · rapport du service d’AEMO · v2 du 08/10/2026',v:'Non mis à disposition. Écarts détectés : § 4 fréquence des visites médiatisées, § 7 scolarité de L., § 9 préconisations.',diff:true}],
+  cons:'Si la v2 fonde la décision du 03/11 sans avoir été consultable par les parents, une difficulté de contradictoire peut être soulevée.',
+  checks:['Identifier la version de référence pour l’audience','Permettre la consultation de la v2 dans les délais'],
+  task:{t:'Identifier la version de référence du rapport éducatif pour le 03/11',svc:'Greffe des enfants',grp:'greffe',ck:'enf',due:'2026-10-27',src:'Vigilance V-05',why:'Deux versions du rapport, une seule mise à disposition des parties.',rule:'Vigilance V-05'}}
+];
+const SEV_ICON={crit:'!',warn:'◷',info:'i'};
+const FILTERS=[['all','Tous'],['greffe','Greffes'],['parquet','Parquet'],['juges','Juges'],['exec','Application des peines']];
+
+/* ---------- État ---------- */
+let S;
+function init(){
+  S={
+    tab:S?S.tab:'pilotage',clock:10*60+4,analysed:false,analysing:false,step:0,
+    selAud:'a5',cell:null,filter:'all',open:{},tlSel:'lib',phone:'missing',
+    avis:{validated:false,checks:[false,false,false],text:AVIS_TXT,ver:'v1'},
+    verified:{},verifying:null,tasks:{},
+    charge:[
+      {k:'corr',s:'Greffe correctionnel',v:14,inc:3,add:0},
+      {k:'jaf',s:'Greffe JAF',v:11,inc:4,add:0},
+      {k:'parquet',s:'Parquet, référent VIF',v:6,inc:0,add:0},
+      {k:'enf',s:'Greffe et cabinets des enfants',v:6,inc:1,add:0},
+      {k:'ap',s:'Application des peines et SPIP',v:5,inc:2,add:0},
+      {k:'jld',s:'Greffe JLD',v:3,inc:1,add:0}
+    ],
+    actions:[
+      {id:'b1',t:'Reconvoquer le père à l’audience du juge des enfants du 3 novembre',svc:'Greffe des enfants',grp:'greffe',ck:'enf',due:'2026-10-20',src:'WinEURS · convocation du 18/09, AR non retourné',why:'La convocation a été envoyée au 12 rue des Tilleuls alors que M. R. est détenu depuis le 12/01 (GENESIS).',rule:'Vigilance V-02',status:'todo'},
+      {id:'b2',t:'Obtenir la pièce n°14 annoncée par Me Anne V.',svc:'Greffe JAF',grp:'greffe',ck:'jaf',due:'2026-10-28',src:'RPVA · bordereau du 01/10/2026',why:'13 pièces reçues sur 14 annoncées dans le dossier RG 26/01177.',rule:'Vigilance V-04',status:'todo'},
+      {id:'b3',t:'Demander l’extraction de M. K. pour l’audience du 20 octobre',svc:'Greffe correctionnel',grp:'greffe',ck:'corr',due:'2026-10-16',src:'GENESIS · Cassiopée 26/091/0017',why:'Personne détenue citée à l’audience collégiale du 20/10.',rule:'R-DET-01',status:'todo'},
+      {id:'b4',t:'Réserver la visioconférence avec le CP pour l’audience JLD du 28 octobre',svc:'Greffe JLD',grp:'greffe',ck:'jld',due:'2026-10-23',src:'Agenda Outlook du service · GENESIS',why:'Comparution par visioconférence prévue, créneau non réservé.',rule:'R-DET-02',status:'todo'}
+    ],
+    journal:[
+      {t:'09:42',who:'GENESIS',sys:true,what:'Événement reçu : libération prévisionnelle de M. R. fixée au 29/10/2026',ref:'fiche d’écrou n° 24871, v4'},
+      {t:'08:32',who:'Claire L.',what:'Tâches créées depuis les points de vigilance V-02 et V-04',ref:'2 actions'},
+      {t:'08:15',who:'Vigie',sys:true,what:'5 points de vigilance détectés, sources jointes',ref:'V-01 à V-05'},
+      {t:'08:15',who:'Vigie',sys:true,what:'Contrôle quotidien : 5 audiences et 41 affaires analysées',ref:'règles v2026.10'}
+    ]
+  };
+}
+const tick=()=>{S.clock+=2;renderClock();return hhmm(S.clock)};
+const log=(who,what,ref,sys)=>S.journal.unshift({t:tick(),who,what,ref,sys});
+const bump=(ck,d,isNew)=>{const c=S.charge.find(x=>x.k===ck);if(!c)return;c.v+=d;if(isNew)c.add+=d};
+
+/* ---------- Rendu ---------- */
+function renderClock(){ $('#clock').textContent=`jeu. 15 oct. 2026 · ${hhmm(S.clock)}` }
+function renderCounts(){
+  $('#n-affaire').textContent=S.analysed?'':'1';
+  $('#n-actions').textContent=S.actions.filter(a=>a.status!=='done').length;
+  const open=VIG.filter(v=>!S.verified[v.id]);
+  const n=$('#n-vig'); n.textContent=open.length||''; n.classList.toggle('hot',open.some(v=>v.sev==='crit'));
+}
+function renderTabs(){
+  $$('.tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===S.tab)));
+  $$('.view').forEach(v=>v.hidden=v.id!=='v-'+S.tab);
+}
+
+function renderBanner(){
+  const b=$('#evt-banner');
+  if(!S.analysed){
+    b.className='event';
+    b.innerHTML=`<span class="pulse" aria-hidden="true"></span>
+      <div class="ev-body"><div class="ev-meta">GENESIS · aujourd’hui 09:42 · événement non traité</div>
+      <div class="ev-title">Libération prévisionnelle de M. Julien R. fixée au jeudi 29 octobre 2026</div>
+      <div class="ev-sub">Cette personne apparaît dans 4 procédures ouvertes au tribunal : pénale, ordonnance de protection, divorce et assistance éducative.</div></div>
+      <button class="btn primary" data-analyse>Analyser l’impact</button>`;
+  } else {
+    const pending=S.avis.validated?'avis à la victime validé':'1 avis en attente de validation';
+    b.className='event done';
+    b.innerHTML=`<span class="pulse" aria-hidden="true"></span>
+      <div class="ev-body"><div class="ev-meta">GENESIS · 09:42 · événement traité</div>
+      <div class="ev-title">Libération de M. R. le 29 octobre : 6 actions réparties entre 5 services</div>
+      <div class="ev-sub">Parquet, greffe JAF, juge des enfants, application des peines et SPIP · ${pending}.</div></div>
+      <button class="btn" data-go="actions">Voir les actions</button>`;
+  }
+}
+function renderStats(){
+  const t=AUD.reduce((a,x)=>({n:a.n+x.n,r:a.r+x.ready,t:a.t+x.todo,b:a.b+x.blocked}),{n:0,r:0,t:0,b:0});
+  const open=S.charge.reduce((s,c)=>s+c.v,0);
+  $('#stats').innerHTML=`
+    <div class="stat"><span class="stat-l">Affaires prêtes</span><span class="stat-v mono">${t.r}<small> / ${t.n}</small></span><span class="stat-s">sur ${AUD.length} audiences</span></div>
+    <div class="stat"><span class="stat-l">À compléter</span><span class="stat-v mono">${t.t}</span><span class="stat-s">pièce, AR ou notification manquants</span></div>
+    <div class="stat"><span class="stat-l">Difficultés en attente</span><span class="stat-v mono">${t.b}</span><span class="stat-s">à examiner par un professionnel</span></div>
+    <div class="stat"><span class="stat-l">Actions ouvertes</span><span class="stat-v mono">${open}</span><span class="stat-s">tous services confondus</span></div>`;
+}
+function renderAuds(){
+  $('#auds').innerHTML=AUD.map(a=>{
+    const seg=(c,n)=>n?`<i class="${c}" style="flex:${n}"></i>`:'';
+    const parts=[`${a.ready} prêtes`];if(a.todo)parts.push(`${a.todo} à compléter`);if(a.blocked)parts.push(`${a.blocked} difficulté${a.blocked>1?'s':''}`);
+    return `<button class="aud${a.id===S.selAud?' sel':''}" data-aud="${a.id}" aria-pressed="${a.id===S.selAud}">
+      <span class="aud-date"><b>${fDay(a.date)}</b><span class="mono muted">${a.date.slice(11,16).replace(':','h')}</span></span>
+      <span class="aud-name">${a.label}<span>${a.n} affaires · ${a.room}</span></span>
+      <span class="rb-wrap"><span class="rb" role="img" aria-label="${parts.join(', ')}">${seg('ok',a.ready)}${seg('warn',a.todo)}${seg('crit',a.blocked)}</span><span class="rb-t">${parts.join(' · ')}</span></span>
+      <span class="aud-flags">${a.flags.map(([s,t])=>`<span class="flag ${s}">${t}</span>`).join('')}</span>
+    </button>`}).join('');
+}
+function renderCharge(){
+  const max=20;
+  $('#charge').innerHTML=S.charge.map(c=>{
+    const base=Math.max(0,c.v-c.add);
+    return `<div class="bar-row" title="${esc(c.s)} : ${c.v} actions ouvertes, dont ${c.inc} dossiers incomplets">
+      <span class="bar-l">${c.s}<span>${c.inc} incomplet${c.inc>1?'s':''}</span></span>
+      <span class="bar-t">${base?`<span class="bar-f" style="width:${base/max*100}%"></span>`:''}${c.add?`<span class="bar-n" style="width:${c.add/max*100}%"></span>`:''}</span>
+      <span class="bar-v">${c.v}${c.add?` <em>+${c.add}</em>`:''}</span></div>`}).join('')
+    + (S.analysed?`<div class="legend"><span><i style="background:var(--accent);opacity:.45"></i>créées par l’événement de 09:42</span></div>`:'');
+}
+function renderMatrix(){
+  const a=AUD.find(x=>x.id===S.selAud);
+  $('#mx-title').textContent=`${fDay(a.date)} · ${a.label}`;
+  const rows=[...a.rows].sort((x,y)=>rank(x)-rank(y));
+  $('#mx').innerHTML=`<thead><tr><th>Affaire</th>${COLS.map(([,l])=>`<th>${l}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>
+    <td><span class="mono">${r.ref}</span> · <span class="who">${r.who}</span>${r.link?` <button class="btn ghost" data-go="affaire">Ouvrir l’affaire</button>`:''}</td>
+    ${COLS.map(([k])=>{const [s,l,d]=cellOf(r,k);const on=S.cell&&S.cell.ref===r.ref&&S.cell.k===k;
+      return `<td>${s==='na'?'<span class="cell na">—</span>':`<button class="cell ${s}${on?' on':''}" data-cell="${esc(r.ref)}|${k}" title="${esc(d)}"><b aria-hidden="true">${SYM[s]}</b>${l}</button>`}</td>`}).join('')}
+  </tr>`).join('')}</tbody>`;
+  let det='Sélectionnez une case : Vigie affiche le constat et la source dont il provient.';
+  if(S.cell){const r=a.rows.find(x=>x.ref===S.cell.ref);if(r){const [,l,d]=cellOf(r,S.cell.k);const col=COLS.find(c=>c[0]===S.cell.k)[1];det=`<b>${r.ref} · ${col} · ${l}</b><br>${d}`}}
+  $('#mx-detail').innerHTML=det;
+}
+
+function renderEvent(){
+  const head=`<div class="panel-h"><h2>Événement entrant</h2><span class="meta mono">GENESIS · 15/10 · 09:42</span></div>
+    <div class="evc"><div class="evc-t">Libération prévisionnelle de M. Julien R.</div>
+    <div class="evc-d"><span class="big mono">29/10/2026</span><span>Fin de peine recalculée après réductions de peine · fiche d’écrou n° 24871, v4 · saisie par le greffe pénitentiaire du CP de Valmont</span></div></div>`;
+  let body;
+  if(!S.analysed&&!S.analysing){
+    body=`<p class="hint">Vigie va rechercher les dossiers concernés, appliquer les règles autorisées et proposer des actions. Rien n’est envoyé sans validation.</p>
+      <div class="row-btns"><button class="btn primary" data-analyse>Analyser l’impact sur les dossiers liés</button></div>`;
+  } else {
+    body=`<ol class="steps">${STEPS.map((s,i)=>{
+      const st=i<S.step?'done':(i===S.step&&S.analysing?'run':'wait');
+      const show=st==='done';
+      return `<li class="step ${st}${s.guard?' guard':''}"><span class="step-n">${st==='done'?(s.guard?'✓':i+1):i+1}</span><div>
+        <div class="step-t">${s.t}</div>${show?`<div class="step-d">${s.d}</div>${s.rules?`<ul class="rules">${RULES.map(([id,t])=>`<li><span class="rid">${id}</span><span>${t}</span></li>`).join('')}</ul>`:''}`:''}</div></li>`}).join('')}</ol>
+      ${S.analysed?`<div class="row-btns"><button class="btn primary" data-go="actions" data-open="n1">Voir les 6 actions</button><button class="btn" data-go="vigilance">Points de vigilance</button></div>`:''}`;
+  }
+  $('#evt-card').innerHTML=head+body;
+}
+function renderProcs(){
+  $('#procs').innerHTML=PROCS.map(p=>`<div class="proc">
+    <div class="proc-h"><i class="sw" style="--c:${PROC[p.k].c}"></i>${PROC[p.k].n}</div>
+    <div class="proc-r">${p.sys} · ${p.ref}</div>
+    <div class="proc-s">${p.s}</div>
+    ${S.analysed?`<div class="proc-i">→ ${p.i}</div>`:''}</div>`).join('');
+}
+const T0=+new Date('2026-01-01T00:00:00'),T1=+new Date('2027-01-01T00:00:00');
+const pct=iso=>Math.max(0,Math.min(100,(+new Date(iso+'T12:00:00')-T0)/(T1-T0)*100));
+function renderTimeline(){
+  const ticks=MOIS.map((m,i)=>`<span class="tick" style="left:${pct(`2026-${String(i+1).padStart(2,'0')}-01`)}%">${m}</span>`).join('');
+  const lanes=LANES.map(k=>{
+    const spans=SPANS.filter(s=>s.lane===k).map(s=>{const a=pct(s.from),b=s.to?pct(s.to):100;return `<span class="span" style="left:${a}%;width:${b-a}%" title="${esc(s.t)}"></span>`}).join('');
+    const evs=EVENTS.filter(e=>e.lane===k).map(e=>`<button class="ev${e.key?' key':''}${S.tlSel===e.id?' sel':''}" style="left:${pct(e.d)}%" data-ev="${e.id}" aria-label="${esc(e.t)}, ${fNum(e.d)}">
+      <span class="dot"></span><span class="ev-l ${e.pos} ${e.a}"><span class="mono">${fNum(e.d).slice(0,5)}</span>${e.s}</span></button>`).join('');
+    const hit=S.analysed&&k!=='penal';
+    return `<div class="lane" style="--c:${PROC[k].c}">
+      <div class="lane-l"><span class="lane-n"><i class="sw"></i>${PROC[k].n}</span><span class="lane-s mono">${LANE_SYS[k]}</span>${hit?'<span class="lane-i">→ action créée</span>':''}</div>
+      <div class="lane-t">${hit?`<span class="zone" style="left:${pct('2026-10-29')}%"></span>`:''}${spans}${k==='op'?'<span class="beyond mono">→ 05/05/2027</span>':''}${evs}</div></div>`;
+  }).join('');
+  $('#tl').innerHTML=`<div class="tl-axis"><span></span><div class="ticks">${ticks}</div></div>
+    <div class="tl-body">${lanes}<div class="overlay"><span class="today" style="left:${pct('2026-10-15')}%"></span>${S.analysed?`<span class="impact" style="left:${pct('2026-10-29')}%"></span>`:''}</div></div>
+    <div class="tl-foot"><span></span><div class="ticks" style="height:28px"><span class="today-tag" style="left:${pct('2026-10-15')}%">aujourd’hui 15/10</span></div></div>`;
+  const e=EVENTS.find(x=>x.id===S.tlSel);
+  $('#tl-detail').innerHTML=e?`<div class="tl-detail"><h3><i class="sw" style="--c:${PROC[e.lane].c}"></i>${e.t} · <span class="mono">${fNum(e.d)}</span></h3>
+    <p>${e.more}</p>
+    <dl class="kv"><dt>Source</dt><dd class="mono">${e.src}</dd><dt>Saisi par</dt><dd>${e.by}</dd><dt>Version</dt><dd class="mono">${e.v}</dd></dl></div>`:'';
+}
+function renderProv(){
+  const rows=[
+   {k:'Date de naissance de M. R.',v:'<span class="mono">03/02/1988</span>',flag:['warn','Autre valeur dans l’assignation : 03/02/1989 (V-03)'],src:'Cassiopée · fiche personne',by:'Greffe correctionnel · 12/01/2026',ver:'v2',use:['penal','op','je','jaf']},
+   {k:'Situation pénitentiaire de M. R.',v:'Détenu au CP de Valmont · libération prévue le <span class="mono">29/10/2026</span>',src:'GENESIS · fiche d’écrou n° 24871',by:'Greffe pénitentiaire · 15/10/2026 09:42',ver:'v4',use:['penal','op','je','jaf']},
+   {k:'Domicile de Mme M.',v:'Dissimulé · domicile élu chez Me Anne V.',flag:['crit','Adresse en clair dans la fiche partie du divorce (V-01)'],src:'WinCI TGI · OP RG 26/00412',by:'Greffe JAF · 05/05/2026',ver:'v3',use:['op','penal','je']},
+   {k:'Demande d’information de la victime',v:'Oui, pour toute sortie de détention',src:'Cassiopée · note d’audience, cote D-41',by:'Greffe correctionnel · 14/01/2026',ver:'v1',use:['penal']},
+   S.phone==='reused'
+    ? {k:'Téléphone sécurisé de Mme M.',v:'<span class="mono">06 •• •• •• 47</span> <span class="pill info">masqué</span>',flag:['ok','Réutilisé sans nouvelle saisie'],src:'WinCI TGI · OP RG 26/00412 (source d’origine conservée)',by:`Greffe JAF · 05/05/2026<br><span class="muted">réutilisé le 15/10 par Claire L.</span>`,ver:'v3',use:['op','penal']}
+    : {k:'Téléphone sécurisé de Mme M.',v:`<span class="muted">Absent du dossier pénal</span><div class="reuse"><div><b>Trouvé dans un autre dossier autorisé :</b> ordonnance de protection, WinCI TGI, RG 26/00412, saisi par le greffe JAF le 05/05/2026 (v3).</div><div class="reuse-b"><button class="btn sm primary" data-reuse>Réutiliser avec sa source</button><button class="btn sm" data-ask>Demander une nouvelle saisie</button></div></div>`,src:'—',by:'—',ver:'—',use:['op']},
+   {k:'Adresse de sortie de M. R.',v:S.analysed?'Saisie unique demandée au SPIP (action du 23/10)':'<span class="muted">Non renseignée</span>',flag:['info','Absente de toutes les sources autorisées'],src:'—',by:'—',ver:'—',use:[]},
+   {k:'Avocats constitués',v:'Me Anne V. pour Mme M. · Me Paul D. pour M. R.',src:'RPVA · actes de constitution',by:'Avocats · 02/06 et 18/06/2026',ver:'v1',use:['op','jaf']}
+  ];
+  $('#prov').innerHTML=`<thead><tr><th>Donnée</th><th>Valeur</th><th>Source</th><th>Saisie par</th><th>Version</th><th>Utilisée dans</th></tr></thead><tbody>${rows.map(r=>`<tr>
+    <td>${r.k}</td>
+    <td>${r.v}${r.flag?`<div class="chipline"><span class="pill ${r.flag[0]}">${r.flag[1]}</span></div>`:''}</td>
+    <td class="mono" style="font-size:12px">${r.src}</td><td>${r.by}</td><td class="mono">${r.ver}</td>
+    <td><div class="us">${r.use.length?r.use.map(uChip).join(''):'<span class="muted">—</span>'}</div></td></tr>`).join('')}</tbody>`;
+}
+
+function statusPill(a){
+  if(a.status==='done')return `<span class="pill ok">${a.special==='avis'?'Validé · transmis':'Fait'}</span>`;
+  if(a.status==='validation')return `<span class="pill warn">Validation requise</span>`;
+  return `<span class="pill info">À faire</span>`;
+}
+function groupOf(due){return due<='2026-10-18'?'Cette semaine':due<='2026-10-25'?'Semaine du 19 octobre':'Semaine du 26 octobre'}
+function renderFilters(){
+  $('#filters').innerHTML=FILTERS.map(([k,l])=>{const n=S.actions.filter(a=>(k==='all'||a.grp===k)&&a.status!=='done').length;
+    return `<button class="fchip" data-filter="${k}" aria-pressed="${S.filter===k}">${l} · ${n}</button>`}).join('');
+}
+function avisPanel(a){
+  if(S.avis.validated){
+    return `<div class="validated">Validé par Claire L. à ${S.avis.at} · projet ${S.avis.ver} · transmis au circuit d’envoi, à l’adresse du domicile élu.</div>
+      <div class="letter-h"><span>Texte validé</span></div><textarea class="letter" id="avis-text" readonly>${esc(S.avis.text)}</textarea>`;
+  }
+  const all=S.avis.checks.every(Boolean);
+  return `<div class="draft">
+    <div><div class="letter-h"><span>Projet d’avis · préparé par Vigie, modifiable</span><button class="btn ghost" data-reset-text>Rétablir le texte d’origine</button></div>
+      <label for="avis-text" class="muted" style="position:absolute;left:-9999px">Texte de l’avis</label>
+      <textarea class="letter" id="avis-text">${esc(S.avis.text)}</textarea></div>
+    <div class="checks"><h4>Vérifications avant validation</h4>
+      ${AVIS_CHECKS.map(([t,s],i)=>`<label class="chk" for="chk-${i}"><input type="checkbox" id="chk-${i}" data-chk="${i}"${S.avis.checks[i]?' checked':''}><span><b>${t}</b><small>${s}</small></span></label>`).join('')}
+      <button class="btn primary" data-validate id="btn-validate"${all?'':' disabled'}>Valider le projet</button>
+      <p class="meta">Vigie n’envoie rien seule. Après validation, l’avis part par le circuit habituel du service.</p>
+    </div></div>`;
+}
+function renderActions(){
+  renderFilters();
+  const list=S.actions.filter(a=>S.filter==='all'||a.grp===S.filter).sort((x,y)=>x.due.localeCompare(y.due));
+  const groups={};list.forEach(a=>{(groups[groupOf(a.due)]=groups[groupOf(a.due)]||[]).push(a)});
+  const order=['Cette semaine','Semaine du 19 octobre','Semaine du 26 octobre'];
+  $('#agroups').innerHTML=order.filter(g=>groups[g]).map(g=>`<div class="agroup"><h3>${g}</h3>${groups[g].map(a=>{
+    const open=!!S.open[a.id];
+    return `<article class="act ${a.status}${a.isNew&&a.status!=='done'?' isnew':''}">
+      <button class="act-h" data-act="${a.id}" aria-expanded="${open}">
+        <span class="act-ic" aria-hidden="true">${a.status==='done'?'✓':''}</span>
+        <span><span class="act-t">${a.t}${a.isNew?'<span class="new">Nouveau</span>':''}</span>
+        <span class="act-m"><span>${a.svc}</span><span>avant le ${fDay(a.due)}</span><span class="mono">${a.rule}</span></span></span>
+        ${statusPill(a)}
+      </button>
+      ${open?`<div class="act-d">
+        <dl class="kv"><dt>Déclenchée par</dt><dd class="mono" style="font-size:12.5px">${a.src}</dd><dt>Pourquoi</dt><dd>${a.why}</dd><dt>Règle</dt><dd class="mono" style="font-size:12.5px">${a.rule}</dd><dt>Responsable</dt><dd>${a.svc}</dd></dl>
+        ${a.limit?`<div class="limit">${a.limit}</div>`:''}
+        ${a.special==='avis'?avisPanel(a):(a.status!=='done'?`<div><button class="btn sm" data-done="${a.id}">Marquer comme faite</button></div>`:`<div class="validated">Faite · ${a.doneAt}</div>`)}
+      </div>`:''}
+    </article>`}).join('')}</div>`).join('')||'<p class="meta">Aucune action pour ce filtre.</p>';
+  $('#journal').innerHTML=S.journal.map(j=>`<li><span class="mono muted">${j.t}</span><span class="j-who${j.sys?' sys':''}">${j.who}</span><span class="j-what">${j.what}<span>${j.ref||''}</span></span></li>`).join('');
+}
+
+function renderVig(){
+  $('#vlist').innerHTML=VIG.map(v=>{
+    const ver=S.verified[v.id];
+    const pill=ver?`<span class="pill ok">✓ Vérifié</span>`:`<span class="pill ${v.sev}"><span class="ico" aria-hidden="true">${SEV_ICON[v.sev]}</span>${v.sevL}</span>`;
+    const head=`<div class="v-h"><span class="v-id">${v.id}</span><span class="v-t">${v.t}</span>${pill}</div>`;
+    if(ver)return `<article class="vcard verified">${head}<p class="vdone">Vérifié par Claire L. à ${ver.at} · motif : ${ver.motif}</p></article>`;
+    const taskId=v.linked||S.tasks[v.id];
+    const taskBtn=taskId?`<button class="btn sm" data-go="actions" data-open="${taskId}">Voir la tâche</button>`:`<button class="btn sm" data-task="${v.id}">Créer une tâche</button>`;
+    const foot=S.verifying===v.id
+      ?`<label for="motif-${v.id}" class="meta">Motif</label><select id="motif-${v.id}"><option>Corrigé dans le dossier</option><option>Sans incidence après vérification</option><option>Transmis au magistrat pour appréciation</option></select><button class="btn sm primary" data-verify-ok="${v.id}">Confirmer</button><button class="btn sm" data-verify-cancel>Annuler</button>`
+      :`${taskBtn}<button class="btn sm" data-verify="${v.id}">Marquer comme vérifié</button><span class="note">Vigie signale ; la qualification appartient au professionnel.</span>`;
+    return `<article class="vcard">${head}
+      <div class="v-body">
+        <div class="srcs">${v.srcs.map(s=>`<div class="src${s.diff?' diff':''}"><div class="src-h"><span>${s.h}</span><button data-src="${esc(s.h)}">Ouvrir la source</button></div><div class="src-v">${s.v}</div></div>`).join('')}</div>
+        <div class="v-side"><h4>Conséquence possible si rien n’est fait</h4><p>${v.cons}</p><h4>Vérifications suggérées</h4><ul>${v.checks.map(c=>`<li>${c}</li>`).join('')}</ul><div class="us">${v.procs.map(uChip).join('')}</div></div>
+      </div>
+      <div class="v-f">${foot}</div></article>`}).join('');
+}
+
+function renderAll(){
+  renderClock();renderCounts();renderTabs();
+  renderBanner();renderStats();renderAuds();renderCharge();renderMatrix();
+  renderEvent();renderProcs();renderTimeline();renderProv();
+  renderActions();renderVig();
+}
+
+/* ---------- Interactions ---------- */
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+function go(tab,openId){
+  S.tab=tab;if(openId)S.open[openId]=true;
+  if(openId&&S.filter!=='all'){const a=S.actions.find(x=>x.id===openId);if(a&&a.grp!==S.filter)S.filter='all'}
+  renderTabs();renderActions();window.scrollTo({top:0,behavior:RM?'auto':'smooth'});
+}
+async function analyse(){
+  if(S.analysed||S.analysing)return;
+  S.analysing=true;S.step=0;renderEvent();
+  for(let i=0;i<STEPS.length;i++){await wait(750);S.step=i+1;renderEvent()}
+  S.analysing=false;S.analysed=true;
+  NEW_ACTIONS.forEach(a=>{S.actions.push({...a,isNew:true});bump(a.ck,1,true)});
+  log('Vigie','Rapprochement d’identité : 4 dossiers liés','nom, prénoms, date de naissance, n° d’écrou',true);
+  log('Moteur de règles','5 règles applicables','R-VIF-01 · R-OP-02 · R-JE-03 · R-CIV-04 · R-EXE-05',true);
+  log('Vigie','6 actions créées, 1 projet d’avis en attente de validation','aucun envoi, aucune mesure modifiée',true);
+  renderAll();toast('6 actions créées · 1 avis en attente de validation');
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  const d=t.dataset;
+  if(d.tab){go(d.tab);return}
+  if('analyse' in d){go('affaire');analyse();return}
+  if(d.go){go(d.go,d.open);return}
+  if(d.aud){S.selAud=d.aud;S.cell=null;renderAuds();renderMatrix();return}
+  if(d.cell){const i=d.cell.lastIndexOf('|');S.cell={ref:d.cell.slice(0,i),k:d.cell.slice(i+1)};renderMatrix();return}
+  if(d.ev){S.tlSel=d.ev;renderTimeline();return}
+  if('reuse' in d){S.phone='reused';log('Claire L.','Donnée réutilisée : téléphone sécurisé de Mme M., sans nouvelle saisie','source conservée : WinCI TGI · OP RG 26/00412 · v3');renderProv();renderActions();toast('Donnée réutilisée. Sa source et sa version sont conservées.');return}
+  if('ask' in d){toast('Cette donnée existe déjà dans un dossier autorisé : la réutiliser évite une double saisie.');return}
+  if(d.filter){S.filter=d.filter;renderActions();return}
+  if(d.act){S.open[d.act]=!S.open[d.act];renderActions();return}
+  if(d.done){const a=S.actions.find(x=>x.id===d.done);a.status='done';a.doneAt=`par Claire L. à ${tick()}`;bump(a.ck,-1,a.isNew);
+    S.journal.unshift({t:hhmm(S.clock),who:'Claire L.',what:`Action faite : ${a.t}`,ref:a.rule});renderCounts();renderActions();renderCharge();renderStats();toast('Action marquée comme faite.');return}
+  if('resetText' in d){S.avis.text=AVIS_TXT;const ta=$('#avis-text');if(ta)ta.value=AVIS_TXT;return}
+  if('validate' in d){
+    if(!S.avis.checks.every(Boolean))return;
+    const edited=S.avis.text.trim()!==AVIS_TXT.trim();
+    S.avis.ver=edited?'v2, modifié par Claire L.':'v1';
+    S.avis.validated=true;S.avis.at=tick();
+    const a=S.actions.find(x=>x.id==='n1');a.status='done';bump(a.ck,-1,true);
+    S.journal.unshift({t:S.avis.at,who:'Claire L.',what:`Avis à la victime validé (projet ${S.avis.ver}) et transmis au circuit d’envoi`,ref:'vérifications : cote D-41 · domicile élu (OP v3) · relecture'});
+    renderAll();toast('Avis validé. Il part par le circuit d’envoi habituel.');return}
+  if(d.verify){S.verifying=d.verify;renderVig();return}
+  if('verifyCancel' in d){S.verifying=null;renderVig();return}
+  if(d.verifyOk){const id=d.verifyOk;const m=$('#motif-'+id).value;S.verified[id]={motif:m,at:tick()};S.verifying=null;
+    S.journal.unshift({t:S.verified[id].at,who:'Claire L.',what:`Point ${id} marqué comme vérifié`,ref:'motif : '+m});renderCounts();renderVig();renderActions();toast(`${id} vérifié. Le motif est enregistré au journal.`);return}
+  if(d.task){const v=VIG.find(x=>x.id===d.task);const id='t-'+v.id;S.tasks[v.id]=id;
+    S.actions.push({id,...v.task,status:'todo'});bump(v.task.ck,1);
+    S.journal.unshift({t:tick(),who:'Claire L.',what:`Tâche créée depuis ${v.id} : ${v.task.t}`,ref:v.task.svc});
+    renderCounts();renderVig();renderActions();renderCharge();renderStats();toast('Tâche créée dans l’agenda d’actions.');return}
+  if(d.src){toast(`Ouverture de la source (simulée) : ${d.src}`);return}
+  if('reset' in d){init();S.tab='pilotage';renderAll();window.scrollTo(0,0);toast('Démo réinitialisée.');return}
+});
+document.addEventListener('change',e=>{
+  const c=e.target.closest('[data-chk]');if(!c)return;
+  S.avis.checks[+c.dataset.chk]=c.checked;
+  const b=$('#btn-validate');if(b)b.disabled=!S.avis.checks.every(Boolean);
+});
+document.addEventListener('input',e=>{if(e.target.id==='avis-text'&&!S.avis.validated)S.avis.text=e.target.value});
+
+init();
+const h=(location.hash||'').slice(1);
+if(['pilotage','affaire','actions','vigilance','archi'].includes(h))S.tab=h;
+renderAll();
+})();
+</script>
+</body>
+</html>

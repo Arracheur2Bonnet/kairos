@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigie · présentation</title>
+<style>
+/* Présentation 16:9 en un seul fichier, sans dépendance : scène de 1600 × 900 mise à l’échelle de l’écran.
+   Clavier : → / Espace / PageDown suivant · ← / PageUp précédent · F plein écran · N notes · S sommaire · B écran blanc */
+:root{
+  --bg:#FFFFFF; --card:#F5F5F7; --ink:#1D1D1F; --ink-2:#6E6E73; --ink-3:#AEAEB2; --sep:#D2D2D7;
+  --tint:#000091; --tint-fill:rgba(0,0,145,.07);
+  --red:#D70015; --red-dot:#FF3B30; --orange:#C93400; --orange-dot:#FF9500; --green:#248A3D; --green-dot:#34C759; --gray-dot:#8E8E93; --indigo:#5856D6;
+  --p-penal:#eb6834; --p-op:#6250d6; --p-je:#1baf7a; --p-jaf:#2a78d6;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI Variable Display","Segoe UI",system-ui,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2,h3,h4,p,ul,ol{margin:0;padding:0}
+ul,ol{list-style:none}
+button{font:inherit}
+.deck{position:fixed;inset:0;background:var(--bg)}
+.stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform:translate(-50%,-50%) scale(var(--s,1));transform-origin:center}
+.slide{position:absolute;inset:0;padding:84px 120px 92px;display:flex;flex-direction:column;gap:26px;opacity:0;visibility:hidden;transform:translateX(36px);transition:opacity .5s var(--ease),transform .5s var(--ease),visibility 0s linear .5s}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.slide.past{transform:translateX(-36px)}
+.slide h2{font-size:60px;line-height:1.08;font-weight:700;letter-spacing:-.032em;max-width:1360px;text-wrap:balance}
+.sub{font-size:28px;line-height:1.35;color:var(--ink-2);max-width:1200px;text-wrap:balance}
+.notes{display:none}
+[data-step]{opacity:0;transform:translateY(14px);transition:opacity .45s var(--ease),transform .45s var(--ease)}
+[data-step].on{opacity:1;transform:none}
+.btn{appearance:none;border:0;font:600 24px/1 var(--font);padding:18px 28px;border-radius:14px;background:var(--tint);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:12px;text-decoration:none;white-space:nowrap}
+.btn:hover{filter:brightness(1.15)}
+.btn.soft{background:var(--card);color:var(--tint)}
+.btn:focus-visible,.hud button:focus-visible,.toc button:focus-visible{outline:4px solid rgba(0,0,145,.35);outline-offset:3px}
+.sym{display:inline-block;flex:none;vertical-align:middle}
+.ic svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* 1 · Titre */
+.s-title{justify-content:center;gap:0}
+.s-title .mark{width:104px;height:104px;border-radius:24px;background:var(--tint);color:#fff;display:grid;place-items:center;margin-bottom:44px}
+.s-title .mark svg{width:64px;height:64px}
+.s-title h1{font-size:190px;line-height:.92;font-weight:800;letter-spacing:-.055em}
+.s-title .lead{font-size:46px;color:var(--ink-2);margin-top:18px;font-weight:500;letter-spacing:-.015em}
+.s-title .promise{font-size:40px;line-height:1.3;color:var(--tint);font-weight:600;margin-top:64px;max-width:1080px;letter-spacing:-.015em}
+.s-title .meta{position:absolute;left:120px;bottom:84px;font-size:22px;color:var(--ink-2)}
+
+/* 2 · Le cas */
+.case{position:relative;height:540px}
+.case svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.case .ln{stroke:var(--ink-3);stroke-width:3;stroke-dasharray:4 12;fill:none;transition:stroke .6s}
+.at-1 .case .ln{stroke:var(--tint);stroke-dasharray:14 10;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.pcard{position:absolute;width:440px;height:140px;background:var(--card);border-radius:22px;padding:22px 26px;display:flex;flex-direction:column;gap:4px;transition:background .5s,box-shadow .5s}
+.pcard.tl{left:0;top:0}.pcard.tr{right:0;top:0}.pcard.bl{left:0;bottom:0}.pcard.br{right:0;bottom:0}
+.pcard .h{display:flex;align-items:center;gap:12px;font-size:28px;font-weight:700;letter-spacing:-.015em}
+.pcard .h i{width:14px;height:14px;border-radius:50%;background:var(--c)}
+.pcard small{font-size:20px;color:var(--ink-2)}
+.pcard .q,.pcard .a{font-size:23px;margin-top:auto;display:flex;align-items:center;gap:10px}
+.pcard .q{color:var(--ink-2)}
+.pcard .a{color:var(--tint);font-weight:600;display:none}
+.at-1 .pcard .q{display:none}
+.at-1 .pcard .a{display:flex}
+.at-1 .pcard{background:#fff;box-shadow:0 0 0 2px var(--tint),0 14px 40px rgba(0,0,145,.10)}
+.hubc{position:absolute;left:50%;top:195px;transform:translateX(-50%);width:420px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.hubc .av{width:150px;height:150px;border-radius:50%;background:var(--tint);color:#fff;display:grid;place-items:center;font-size:52px;font-weight:700;position:relative;margin-bottom:6px}
+.hubc .av::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:3px solid var(--p-penal);animation:ring 2s ease-out infinite}
+.at-1 .hubc .av::after{display:none}
+@keyframes ring{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(1.35)}}
+.hubc b{font-size:30px;letter-spacing:-.015em;background:#fff;padding:2px 12px;border-radius:8px}
+.hubc span{font-size:22px;color:var(--ink-2);background:#fff;padding:2px 12px;border-radius:8px}
+.hubc .btn{margin-top:14px}
+.hubc .done{display:none;font-size:22px;color:var(--tint);font-weight:600;margin-top:14px;background:#fff;padding:4px 12px;border-radius:8px}
+.at-1 .hubc .btn{display:none}
+.at-1 .hubc .done{display:block}
+
+/* 3 · Le problème */
+.apps{position:relative;height:500px}
+.tile{position:absolute;left:0;top:0;width:176px;height:100px;background:var(--card);border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:4px;transform:translate(var(--x),var(--y));transition:transform .9s var(--ease) var(--d)}
+.tile b{font-size:23px;letter-spacing:-.01em}
+.tile span{font-size:17px;color:var(--ink-2)}
+.at-1 .tile{transform:translate(var(--x2),0)}
+.apps svg{position:absolute;inset:0;width:100%;height:100%}
+.apps svg line{stroke:var(--tint);stroke-width:2.5;stroke-dasharray:6 8}
+.vbar{position:absolute;left:0;right:0;top:290px;height:120px;border-radius:24px;background:var(--tint);color:#fff;display:flex;align-items:center;gap:28px;padding:0 40px}
+.vbar .mk{width:72px;height:72px;border-radius:18px;background:rgba(255,255,255,.14);display:grid;place-items:center}
+.vbar .mk svg{width:44px;height:44px}
+.vbar b{display:block;font-size:40px;letter-spacing:-.02em}
+.vbar span{font-size:24px;opacity:.85}
+
+/* 4 · Deux moteurs */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;min-height:0}
+.eng{background:var(--card);border-radius:28px;padding:44px;display:flex;flex-direction:column;gap:16px}
+.eng .ic{width:84px;height:84px;border-radius:20px;display:grid;place-items:center;color:#fff;background:var(--tint)}
+.eng .ic.alt{background:var(--indigo)}
+.eng .ic svg{width:48px;height:48px}
+.eng small{font-size:20px;color:var(--ink-2);font-weight:600;margin-top:10px}
+.eng h3{font-size:44px;letter-spacing:-.025em;line-height:1.1}
+.eng p{font-size:26px;color:var(--ink-2)}
+.eng ul{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto}
+.eng li{background:#fff;border-radius:12px;padding:10px 16px;font-size:21px}
+.kicker{font-size:32px;font-weight:600;color:var(--tint);letter-spacing:-.015em}
+
+/* 5 · Démonstration */
+.path{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;counter-reset:n;margin-top:30px}
+.path li{background:var(--card);border-radius:24px;padding:32px 30px;display:flex;flex-direction:column;gap:10px;position:relative}
+.path li::before{counter-increment:n;content:counter(n);width:48px;height:48px;border-radius:50%;background:var(--tint);color:#fff;display:grid;place-items:center;font-size:24px;font-weight:700;margin-bottom:10px}
+.path b{font-size:30px;letter-spacing:-.015em}
+.path span{font-size:22px;color:var(--ink-2);line-height:1.35}
+.demo-cta{display:flex;align-items:center;gap:24px;margin-top:36px}
+.demo-cta .btn{font-size:28px;padding:22px 34px}
+.demo-cta p{font-size:22px;color:var(--ink-2);max-width:620px}
+
+/* 6 · PV */
+.pvg{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:24px 40px}
+.doc{background:#fff;border-radius:22px;padding:28px 32px;box-shadow:0 0 0 1px var(--sep),0 18px 50px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px}
+.doc h4{font-size:18px;color:var(--ink-2);font-weight:600;margin-bottom:8px}
+.doc p{font-size:22px;line-height:1.4;padding:6px 10px;margin-inline:-10px;border-radius:8px}
+.doc .hl{background:var(--tint-fill)}
+.doc .miss{background:rgba(255,59,48,.1);color:var(--red);font-weight:600}
+.checks{display:flex;flex-direction:column;gap:6px}
+.checks li{display:flex;gap:16px;align-items:flex-start;background:var(--card);border-radius:16px;padding:14px 18px}
+.checks li .sym{margin-top:3px}
+.checks b{display:block;font-size:23px}
+.checks span{font-size:19px;color:var(--ink-2);line-height:1.35}
+.checks li.bad{background:rgba(255,59,48,.08)}
+.checks li.bad b{color:var(--red)}
+.alertbar{grid-column:1/-1;display:flex;align-items:center;gap:20px;background:#fff;border-radius:20px;padding:20px 26px;box-shadow:0 0 0 2px var(--red-dot),0 14px 40px rgba(255,59,48,.12)}
+.alertbar b{display:block;font-size:25px}
+.alertbar span{font-size:19px;color:var(--ink-2)}
+.alertbar em{margin-left:auto;font-style:normal;font-size:20px;color:var(--ink-2);text-align:right;max-width:260px}
+
+/* 7 · Escroquerie */
+.fraud{width:1360px;height:440px;display:block;overflow:visible}
+.fraud .pn rect,.fraud .in rect{fill:var(--card);transition:stroke .5s,fill .5s}
+.fraud text{font-family:var(--font);fill:var(--ink)}
+.fraud .nm{font-size:22px;font-weight:700}
+.fraud .sb{font-size:18px;fill:var(--ink-2)}
+.fraud .ty{font-size:17px;fill:var(--ink-2);font-weight:600}
+.fraud .fl{fill:none;stroke:var(--tint);stroke-width:3;stroke-dasharray:900;stroke-dashoffset:900;transition:stroke-dashoffset 1.1s var(--ease)}
+.fraud .fl[data-step]{opacity:1;transform:none}
+.fraud .fl.on{stroke-dashoffset:0}
+.at-3 .fraud .pn.in-series rect{stroke:var(--tint);stroke-width:3}
+.fraud .p5{opacity:1}
+.fraud .p5-t{opacity:0;transition:opacity .5s}
+.at-3 .fraud .p5-t{opacity:1}
+.sumbar{display:flex;align-items:center;gap:20px;background:var(--card);border-radius:20px;padding:20px 26px}
+.sumbar b{font-size:25px}
+.sumbar span{font-size:20px;color:var(--ink-2)}
+.sumbar em{margin-left:auto;font-style:normal;font-size:22px;font-weight:600;color:var(--tint)}
+
+/* 8 · Donnée */
+.reuse{display:grid;grid-template-columns:1fr 220px 1fr;align-items:center;gap:0;margin-top:20px}
+.rcard{background:var(--card);border-radius:24px;padding:32px 34px;display:flex;flex-direction:column;gap:8px;min-height:330px;transition:background .5s,box-shadow .5s}
+.rcard small{font-size:20px;color:var(--ink-2);font-weight:600}
+.rcard b{font-size:30px;letter-spacing:-.015em}
+.rcard .val{font-size:44px;font-weight:700;letter-spacing:.02em;margin-top:10px}
+.rcard .empty{font-size:30px;color:var(--red);font-weight:600;margin-top:10px}
+.rcard .by{font-size:21px;color:var(--ink-2)}
+.rcard .got{display:none}
+.at-1 .rcard.dst .empty{display:none}
+.at-1 .rcard.dst .got{display:flex;flex-direction:column;gap:14px}
+.at-1 .rcard.dst{background:#fff;box-shadow:0 0 0 2px var(--tint),0 14px 40px rgba(0,0,145,.1)}
+.prov{display:flex;flex-wrap:wrap;gap:8px}
+.prov span{background:var(--tint-fill);color:var(--tint);border-radius:10px;padding:8px 12px;font-size:19px;font-weight:600}
+.prov em{font-style:normal;font-weight:400;color:var(--ink-2);margin-right:6px}
+.mid{display:flex;flex-direction:column;align-items:center;gap:20px}
+.mid svg{width:180px;height:40px;overflow:visible}
+.mid svg path{fill:none;stroke:var(--ink-3);stroke-width:3;stroke-dasharray:4 10}
+.at-1 .mid svg path{stroke:var(--tint);stroke-dasharray:12 8;animation:flow 1s linear infinite reverse}
+.mid .ok{display:none;font-size:20px;color:var(--tint);font-weight:600;text-align:center}
+.at-1 .mid .btn{display:none}
+.at-1 .mid .ok{display:block}
+
+/* 9 · Alertes */
+.alg{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;flex:1;min-height:0;align-items:start}
+.alist{background:var(--card);border-radius:24px;overflow:hidden}
+.arow{display:flex;gap:18px;align-items:flex-start;padding:24px 28px}
+.arow + .arow{border-top:1px solid var(--sep)}
+.arow .sym{margin-top:2px}
+.arow b{display:block;font-size:25px;line-height:1.25;letter-spacing:-.01em}
+.arow span{font-size:19px;color:var(--ink-2)}
+.arow .r{color:var(--red);font-weight:600;font-style:normal}
+.arow .o{color:var(--orange);font-weight:600;font-style:normal}
+.never{display:flex;flex-direction:column;gap:14px}
+.never li{display:flex;gap:16px;align-items:center;font-size:27px;font-weight:600;letter-spacing:-.01em;background:var(--card);border-radius:20px;padding:24px 26px}
+
+/* 10 · Rôles */
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;flex:1;min-height:0}
+.role{background:var(--card);border-radius:28px;padding:40px 36px;display:flex;flex-direction:column;gap:14px}
+.role .ic{width:76px;height:76px;border-radius:18px;display:grid;place-items:center;color:#fff}
+.role .ic svg{width:44px;height:44px}
+.role h3{font-size:36px;letter-spacing:-.025em;margin-top:8px}
+.role ul{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.role li{font-size:23px;color:var(--ink-2);line-height:1.35;padding-left:22px;position:relative}
+.role li::before{content:"";position:absolute;left:0;top:13px;width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+
+/* 11 · Pilote */
+.seq{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:40px;position:relative}
+.seq::before{content:"";position:absolute;left:40px;right:40px;top:40px;border-top:3px dashed var(--sep)}
+.seq li{display:flex;flex-direction:column;gap:12px;position:relative}
+.seq .n{width:80px;height:80px;border-radius:50%;background:var(--tint);color:#fff;display:grid;place-items:center;font-size:36px;font-weight:700;box-shadow:0 0 0 10px #fff}
+.seq b{font-size:34px;letter-spacing:-.02em;margin-top:18px}
+.seq p{font-size:24px;color:var(--ink-2);line-height:1.4;max-width:400px}
+
+/* 12 · Sous le capot */
+.spec{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;flex:1;min-height:0}
+.spec h3{font-size:22px;color:var(--ink-2);font-weight:600;margin-bottom:12px}
+.layers,.law{background:var(--card);border-radius:22px;overflow:hidden}
+.layers li{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:12px 22px;font-size:19px;line-height:1.35}
+.layers li + li,.law li + li{border-top:1px solid var(--sep)}
+.layers b{font-weight:700}
+.layers span{color:var(--ink-2)}
+.layers li.src b{color:var(--tint)}
+.law li{padding:14px 22px;font-size:19px;color:var(--ink-2);line-height:1.35}
+.law b{display:block;color:var(--ink);font-size:20px}
+
+/* Barre de contrôle, notes, sommaire */
+.progress{position:fixed;left:0;bottom:0;height:3px;background:var(--tint);transition:width .4s var(--ease);z-index:20}
+.hud{position:fixed;right:18px;bottom:16px;display:flex;align-items:center;gap:4px;padding:6px;border-radius:14px;background:rgba(245,245,247,.88);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 0 0 .5px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.08);z-index:30;transition:opacity .3s}
+.hud.idle{opacity:0;pointer-events:none}
+.hud button{appearance:none;border:0;background:none;width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--ink);cursor:pointer}
+.hud button:hover{background:rgba(0,0,0,.06)}
+.hud button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hud .count{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);padding:0 8px;min-width:60px;text-align:center}
+.notes-panel{position:fixed;left:0;right:0;bottom:0;height:30vh;background:#fff;border-top:1px solid var(--sep);padding:18px 28px;display:grid;grid-template-columns:1fr 220px;gap:24px;z-index:25;font-size:18px;line-height:1.5;overflow:auto}
+.notes-panel h4{font-size:13px;color:var(--ink-2);font-weight:600;margin-bottom:6px}
+.notes-panel .side{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2)}
+.notes-panel .timer{font-size:34px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.notes-panel .side button{appearance:none;border:0;background:var(--card);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--tint);font-weight:600;align-self:flex-start}
+.toc{position:fixed;top:0;bottom:0;left:0;width:340px;background:rgba(250,250,252,.96);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-right:1px solid var(--sep);padding:24px 14px;z-index:40;overflow:auto}
+.toc h4{font-size:13px;color:var(--ink-2);font-weight:600;padding:0 10px 10px}
+.toc button{appearance:none;border:0;background:none;width:100%;display:flex;gap:12px;align-items:baseline;text-align:left;padding:10px;border-radius:10px;font-size:16px;cursor:pointer;color:var(--ink)}
+.toc button span{width:24px;color:var(--ink-2);font-variant-numeric:tabular-nums;font-size:14px}
+.toc button:hover{background:rgba(0,0,0,.05)}
+.toc button[aria-current="true"]{background:var(--tint);color:#fff}
+.toc button[aria-current="true"] span{color:#fff}
+.blank{position:fixed;inset:0;background:#fff;z-index:50}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* Impression ou PDF : une diapositive par page, toutes étapes visibles */
+@media print{
+  @page{size:1600px 900px;margin:0}
+  html,body{overflow:visible;height:auto}
+  .deck{position:static}
+  .stage{position:static;transform:none;width:1600px;height:auto}
+  .slide,.slide.past,.slide.active{position:relative;width:1600px;height:900px;opacity:1;visibility:visible;transform:none;break-after:page;page-break-after:always}
+  [data-step]{opacity:1;transform:none}
+  .fraud .fl{stroke-dashoffset:0}
+  .hud,.progress,.notes-panel,.toc,.blank{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck"><div class="stage" id="stage">
+
+<!-- 1 -->
+<section class="slide s-title" data-title="Vigie">
+  <div class="mark ic"><svg viewBox="0 0 24 24"><path d="M2.5 12c2.6-4.4 5.8-6.6 9.5-6.6s6.9 2.2 9.5 6.6c-2.6 4.4-5.8 6.6-9.5 6.6S5.1 16.4 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+  <h1>Vigie</h1>
+  <p class="lead">La tour de contrôle procédurale</p>
+  <p class="promise">Analyser chaque dossier en continu et révéler les liens invisibles entre les affaires.</p>
+  <p class="meta">Hackathon Droit × Microsoft · octobre 2026</p>
+  <aside class="notes">Bonjour. Vigie est une tour de contrôle procédurale : elle analyse chaque dossier en continu et révèle les liens entre les affaires. Plutôt qu’un long discours, partons d’un cas.</aside>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-title="Le cas" data-steps="1">
+  <h2>Jeudi 29 octobre, M. R. sort de prison.</h2>
+  <p class="sub">Quatre procédures le concernent, chacune dans sa propre application.</p>
+  <div class="case">
+    <svg viewBox="0 0 1360 540" preserveAspectRatio="none" aria-hidden="true">
+      <line class="ln" x1="680" y1="270" x2="440" y2="70"></line>
+      <line class="ln" x1="680" y1="270" x2="920" y2="70"></line>
+      <line class="ln" x1="680" y1="270" x2="440" y2="470"></line>
+      <line class="ln" x1="680" y1="270" x2="920" y2="470"></line>
+    </svg>
+    <div class="pcard tl" style="--c:var(--p-penal)"><div class="h"><i></i>Pénal</div><small>Cassiopée · APPI</small><p class="q">Qui prévient la victime ?</p><p class="a"><i data-sym="ok" data-size="24"></i>Avis à la victime prêt, à valider</p></div>
+    <div class="pcard tr" style="--c:var(--p-op)"><div class="h"><i></i>Ordonnance de protection</div><small>WinCI TGI</small><p class="q">Le parquet est-il au courant ?</p><p class="a"><i data-sym="ok" data-size="24"></i>Mesures de protection à examiner</p></div>
+    <div class="pcard bl" style="--c:var(--p-je)"><div class="h"><i></i>Assistance éducative</div><small>WinEURS</small><p class="q">Et les visites des enfants ?</p><p class="a"><i data-sym="ok" data-size="24"></i>Droit de visite à examiner</p></div>
+    <div class="pcard br" style="--c:var(--p-jaf)"><div class="h"><i></i>Divorce</div><small>WinCI TGI · RPVA</small><p class="q">Le JAF le sait-il avant l’audience ?</p><p class="a"><i data-sym="ok" data-size="24"></i>JAF informé, adresse protégée exclue</p></div>
+    <div class="hubc"><div class="av">JR</div><b>M. Julien R.</b><span>GENESIS · libération le 29/10</span><button class="btn" data-next>Relier les dossiers</button><p class="done">4 actions créées. Rien n’est envoyé sans validation.</p></div>
+  </div>
+  <aside class="notes">M. R. sort de prison le 29 octobre. Il est concerné par quatre procédures, chacune dans une application différente. Aujourd’hui, personne n’a la vue d’ensemble : qui prévient la victime ? Le juge des enfants sait-il que le père sort ? [Cliquer sur « Relier les dossiers »] Vigie relie l’événement aux quatre dossiers et crée une action pour chaque professionnel concerné. Rien n’est envoyé, rien n’est modifié sans validation.</aside>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-title="Le problème">
+  <h2>Les informations existent. Elles sont dispersées.</h2>
+  <p class="sub">Chaque vérification se fait à la main, d’une application à l’autre.</p>
+  <div class="apps">
+    <svg viewBox="0 0 1360 500" preserveAspectRatio="none" data-step="1" aria-hidden="true">
+      <line x1="88" y1="100" x2="88" y2="290"></line><line x1="285" y1="100" x2="285" y2="290"></line><line x1="482" y1="100" x2="482" y2="290"></line><line x1="679" y1="100" x2="679" y2="290"></line><line x1="876" y1="100" x2="876" y2="290"></line><line x1="1073" y1="100" x2="1073" y2="290"></line><line x1="1270" y1="100" x2="1270" y2="290"></line>
+    </svg>
+    <div class="tile" style="--x:30px;--y:40px;--x2:0px;--d:0s"><b>Cassiopée</b><span>chaîne pénale</span></div>
+    <div class="tile" style="--x:430px;--y:150px;--x2:197px;--d:.05s"><b>WinCI TGI</b><span>civil, JAF</span></div>
+    <div class="tile" style="--x:840px;--y:30px;--x2:394px;--d:.1s"><b>WinEURS</b><span>mineurs</span></div>
+    <div class="tile" style="--x:1160px;--y:170px;--x2:591px;--d:.15s"><b>APPI</b><span>application des peines</span></div>
+    <div class="tile" style="--x:170px;--y:330px;--x2:788px;--d:.2s"><b>GENESIS</b><span>détention</span></div>
+    <div class="tile" style="--x:650px;--y:390px;--x2:985px;--d:.25s"><b>RPVA</b><span>avocats</span></div>
+    <div class="tile" style="--x:1080px;--y:400px;--x2:1182px;--d:.3s"><b>Plaintes</b><span>en ligne</span></div>
+    <div class="vbar" data-step="1"><span class="mk ic"><svg viewBox="0 0 24 24"><path d="M2.5 12c2.6-4.4 5.8-6.6 9.5-6.6s6.9 2.2 9.5 6.6c-2.6 4.4-5.8 6.6-9.5 6.6S5.1 16.4 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><b>Vigie</b><span>Une seule vue, sans ressaisie. Chaque donnée garde sa source.</span></div></div>
+  </div>
+  <aside class="notes">Le problème n’est pas l’absence d’outils : les applications existent, chacune fait bien son travail. Le problème, c’est la dispersion, et le temps passé à vérifier à la main. [→] Vigie se branche sur l’existant, en lecture, sans rien ressaisir.</aside>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-title="Deux moteurs">
+  <h2>Deux moteurs.</h2>
+  <div class="duo">
+    <div class="eng"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M4 12h16"/></svg></span><small>Moteur 1</small><h3>Le scanner au fil de l’eau</h3><p>Chaque acte est contrôlé dès son arrivée.</p><ul><li>Pièces et mentions</li><li>Dates et identités</li><li>Notifications et accusés de réception</li><li>Délais et versions</li></ul></div>
+    <div class="eng"><span class="ic alt"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M8.4 6.4l7.2 1.2M6.6 8.4l1.8 7.2M16.4 10l-5.6 6.2"/></svg></span><small>Moteur 2</small><h3>Le moteur de liens</h3><p>Il relie les dossiers dispersés.</p><ul><li>Personnes et adresses</li><li>Téléphones et comptes bancaires</li><li>Noms de domaine et sociétés</li><li>Modes opératoires</li></ul></div>
+  </div>
+  <p class="kicker" data-step="1">L’IA détecte, relie et alerte. Le professionnel décide.</p>
+  <aside class="notes">Vigie repose sur deux moteurs. Le premier contrôle chaque acte dès qu’il arrive. Le second relie les dossiers entre eux, y compris entre juridictions. [→] Dans les deux cas, l’IA détecte et explique ; le professionnel décide.</aside>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-title="Démonstration">
+  <h2>Démonstration.</h2>
+  <ol class="path">
+    <li><b>Pilotage</b><span>Les alertes du jour, chacune avec sa source</span></li>
+    <li><b>Vigilance</b><span>On dépose un PV de garde à vue</span></li>
+    <li><b>Affaire R. / M.</b><span>On analyse l’impact de la libération</span></li>
+    <li><b>Actions</b><span>On valide l’avis à la victime</span></li>
+  </ol>
+  <div class="demo-cta"><a class="btn" href="../prototypes/prototype-v13.html" target="_blank" rel="noopener">Ouvrir le prototype</a><p>Fonctionne hors ligne. Données entièrement fictives.</p></div>
+  <aside class="notes">On passe au prototype (le lien ouvre un nouvel onglet). Parcours : 1. les alertes du jour sur le pilotage ; 2. dans Vigilance, on dépose le PV d’exemple ; 3. dans l’affaire R. / M., on lance l’analyse de la libération ; 4. dans Actions, on coche les trois vérifications et on valide l’avis à la victime. Si la démo ne répond pas, les diapositives suivantes montrent les mêmes étapes.</aside>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-title="Moteur 1 : le PV">
+  <h2>Un PV de garde à vue arrive.</h2>
+  <div class="pvg">
+    <div class="doc">
+      <h4>PV de placement en garde à vue · procédure 2026/004512</h4>
+      <p class="hl">06 h 10 · Placement de M. Laurent T. pour violences sur sa conjointe.</p>
+      <p class="hl">06 h 15 · Notification des droits.</p>
+      <p class="hl">06 h 20 · Demande d’avocat. Me L. avisé à 06 h 25.</p>
+      <p class="hl">06 h 20 · Demande que soit prévenue Mme Sophie B., sa compagne.</p>
+      <p class="hl">06 h 20 · Demande d’examen médical. Médecin requis à 06 h 30.</p>
+      <p class="miss" data-step="2">Aucune mention d’un avis au procureur de la République.</p>
+    </div>
+    <ul class="checks">
+      <li data-step="1"><i data-sym="ok" data-size="26"></i><div><b>Droits notifiés</b><span>Cinq minutes après le placement</span></div></li>
+      <li data-step="1"><i data-sym="ok" data-size="26"></i><div><b>Avocat avisé</b><span>À 06 h 25</span></div></li>
+      <li data-step="1"><i data-sym="ok" data-size="26"></i><div><b>Examen médical</b><span>Médecin requis à 06 h 30</span></div></li>
+      <li data-step="2" class="bad"><i data-sym="ko" data-size="26"></i><div><b>Avis au procureur</b><span>Absent du PV. Recherché dans Cassiopée, la messagerie de permanence et les autres PV : non trouvé.</span></div></li>
+      <li data-step="2"><i data-sym="todo" data-size="26"></i><div><b>Personne à prévenir</b><span>C’est la plaignante : le procureur décide</span></div></li>
+    </ul>
+    <div class="alertbar" data-step="3"><i data-sym="ko" data-size="36"></i><div><b>Aucun avis au procureur retrouvé</b><span>À vérifier sans attendre · Pour : parquet de permanence · Sources : PV, Cassiopée, messagerie</span></div><em>Vigie ne déclare aucune nullité.</em></div>
+  </div>
+  <aside class="notes">Premier moteur. Un PV de garde à vue arrive, Vigie le lit. [→] Droits notifiés, avocat avisé, médecin requis : conforme. [→] En revanche, aucune mention de l’avis au procureur. Avant d’alerter, Vigie le cherche ailleurs : dans Cassiopée, dans la messagerie de permanence, dans les autres PV. Rien. Elle relève aussi que la personne à prévenir est la plaignante. [→] Elle crée une alerte pour le parquet de permanence. Elle ne dit pas que la garde à vue est nulle : elle montre la source et ce qu’il faut vérifier (article 63 du CPP).</aside>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-title="Moteur 2 : l’escroquerie">
+  <h2>Cinq plaintes, cinq sites, un seul domaine de paiement.</h2>
+  <svg class="fraud" id="fraud" viewBox="0 0 1360 440" role="img" aria-label="Rapprochement de cinq plaintes pour escroquerie"></svg>
+  <div class="sumbar" data-step="3"><i data-sym="ok" data-size="32"></i><div><b>P1 à P4 reliées par quatre éléments identiques</b><span>4 services saisis · 2 juridictions · transmis au parquet pour appréciation</span></div><em>Une piste, jamais une accusation.</em></div>
+  <aside class="notes">Second moteur, sur un autre contentieux : l’escroquerie. Cinq plaintes, cinq sites différents, déposées dans des services différents. Prises une à une, elles semblent sans lien. [→] Trois pages de paiement sont sur le même nom de domaine. [→] Deux IBAN et un numéro de téléphone relient les quatre premières. [→] Vigie propose le rapprochement au parquet. C’est une piste à confirmer, jamais une accusation. La cinquième plainte ne présente qu’une ressemblance de mode opératoire : Vigie la signale comme telle, sans la relier.</aside>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-title="Une donnée, une source" data-steps="1">
+  <h2>Une donnée saisie une fois, tracée partout.</h2>
+  <p class="sub">Avant de demander une nouvelle saisie, Vigie cherche dans les applications autorisées.</p>
+  <div class="reuse">
+    <div class="rcard dst"><small>Dossier pénal · Cassiopée</small><b>Téléphone sécurisé de Mme M.</b><p class="empty">Absent</p>
+      <div class="got"><p class="val">06 •• •• •• 47</p><div class="prov"><span><em>Source</em>WinCI TGI</span><span><em>Saisi par</em>greffe JAF</span><span><em>Le</em>05/05/2026</span><span><em>Version</em>3</span></div></div></div>
+    <div class="mid"><svg viewBox="0 0 180 40" aria-hidden="true"><path d="M170 20H10M24 8L10 20l14 12"></path></svg><button class="btn soft" data-next>Chercher</button><p class="ok">Trouvée et réutilisée</p></div>
+    <div class="rcard"><small>Ordonnance de protection · WinCI TGI</small><b>Téléphone sécurisé de Mme M.</b><p class="val">06 •• •• •• 47</p><p class="by">Saisi par le greffe JAF le 05/05/2026 · version 3</p></div>
+  </div>
+  <aside class="notes">C’est le principe du challenge : une donnée saisie une fois, tracée partout. Le téléphone sécurisé de la victime manque au dossier pénal. [Cliquer sur « Chercher »] Vigie le trouve dans l’ordonnance de protection et le réutilise en gardant sa source, son auteur et sa version. Personne n’a eu à le ressaisir.</aside>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-title="Des alertes">
+  <h2>Des alertes. Jamais de notes.</h2>
+  <div class="alg">
+    <div class="alist">
+      <div class="arow"><i data-sym="ko" data-size="30"></i><div><b>Permission de sortir du 12/09 : aucun avis à la victime retrouvé</b><span><em class="r">À traiter</em> · APPI, cote D-41 · pour l’application des peines</span></div></div>
+      <div class="arow"><i data-sym="ko" data-size="30"></i><div><b>Adresse protégée visible dans le dossier de divorce</b><span><em class="r">À traiter</em> · WinCI TGI · pour le greffe JAF</span></div></div>
+      <div class="arow"><i data-sym="todo" data-size="30"></i><div><b>Père détenu convoqué à son ancien domicile</b><span><em class="o">À vérifier</em> · WinEURS, GENESIS · pour le greffe des enfants</span></div></div>
+    </div>
+    <ul class="never" data-step="1">
+      <li><i data-sym="no" data-size="30"></i>Aucune note ni classement des affaires</li>
+      <li><i data-sym="no" data-size="30"></i>Aucun acte déclaré nul ou irrecevable</li>
+      <li><i data-sym="no" data-size="30"></i>Aucun envoi sans validation humaine</li>
+    </ul>
+  </div>
+  <aside class="notes">Vigie ne note ni les affaires ni les personnes. Elle produit des alertes, chacune avec sa source et le service qui doit agir. [→] Et trois interdits, inscrits dans le produit : aucune note, aucun acte déclaré nul, aucun envoi sans validation humaine.</aside>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-title="Qui décide">
+  <h2>L’IA lit et relie. Les règles encadrent. Le professionnel décide.</h2>
+  <div class="trio">
+    <div class="role"><span class="ic" style="background:var(--tint)"><svg viewBox="0 0 24 24"><path d="M2.5 12c2.6-4.4 5.8-6.6 9.5-6.6s6.9 2.2 9.5 6.6c-2.6 4.4-5.8 6.6-9.5 6.6S5.1 16.4 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></span><h3>L’IA</h3><ul><li>Lit chaque acte : dates, identités, références</li><li>Compare les versions et les sources</li><li>Explique chaque alerte</li></ul></div>
+    <div class="role"><span class="ic" style="background:var(--indigo)"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/></svg></span><h3>Les règles</h3><ul><li>Écrites et versionnées avec les juridictions</li><li>Seules les actions prévues sont proposées</li><li>Chaque proposition est rejouable</li></ul></div>
+    <div class="role"><span class="ic" style="background:var(--green-dot)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></span><h3>Le professionnel</h3><ul><li>Valide, modifie ou écarte</li><li>Qualifie juridiquement</li><li>Confirme chaque lien entre affaires</li></ul></div>
+  </div>
+  <aside class="notes">La répartition des rôles est simple. L’IA lit et relie. Un moteur de règles, écrit avec les greffes et les magistrats, limite ce qui peut être proposé. Le professionnel décide, qualifie et valide.</aside>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-title="Prochaine étape">
+  <h2>Prochaine étape : un pilote dans un tribunal judiciaire.</h2>
+  <ol class="seq">
+    <li data-step="1"><span class="n">1</span><b>Écrire les règles avec les greffes</b><p>Violences intrafamiliales et garde à vue d’abord.</p></li>
+    <li data-step="2"><span class="n">2</span><b>Brancher deux sources</b><p>GENESIS et Cassiopée, en lecture seule.</p></li>
+    <li data-step="3"><span class="n">3</span><b>Mesurer</b><p>Temps de vérification gagné, alertes utiles, alertes écartées.</p></li>
+  </ol>
+  <aside class="notes">Pour la suite, nous proposons un pilote dans un tribunal judiciaire, sur un périmètre restreint : violences intrafamiliales et garde à vue. [→] D’abord, écrire les règles avec les greffes. [→] Ensuite, brancher deux sources seulement, en lecture seule. [→] Enfin, mesurer : le temps de vérification gagné et la part d’alertes réellement utiles.</aside>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-title="Sous le capot">
+  <h2>Sous le capot.</h2>
+  <div class="spec">
+    <div><h3>Architecture Microsoft</h3>
+      <ul class="layers">
+        <li class="src"><b>Sources</b><span>Cassiopée, WinCI TGI, WinEURS, APPI, GENESIS, RPVA : rien n’est ressaisi</span></li>
+        <li><b>Connecter</b><span>Azure API Management, Logic Apps, Event Grid</span></li>
+        <li><b>Contrôler</b><span>Azure AI Document Intelligence, Azure OpenAI (AI Foundry)</span></li>
+        <li><b>Relier</b><span>Azure AI Search, Cosmos DB (graphe des liens)</span></li>
+        <li><b>Tracer</b><span>Dataverse (valeur, source, auteur, version), Purview</span></li>
+        <li><b>Agir</b><span>Power Automate, validations dans Teams</span></li>
+        <li><b>Afficher</b><span>Power Apps, Power BI, agent Copilot Studio</span></li>
+        <li><b>Sécurité</b><span>Entra ID : habilitations par service, journal d’audit</span></li>
+      </ul></div>
+    <div><h3>Cadre juridique</h3>
+      <ul class="law">
+        <li><b>Pas de décision automatisée</b>Art. 22 RGPD, art. 47 loi Informatique et libertés</li>
+        <li><b>Données pénales</b>Directive (UE) 2016/680 : minimisation, accès par habilitation</li>
+        <li><b>Rapprochements</b>Sur le modèle des logiciels de rapprochement judiciaire, art. 230-20 et s. CPP</li>
+        <li><b>AI Act</b>Préparation et signalement sous contrôle humain ; qualification à confirmer</li>
+        <li><b>Aucune évaluation des personnes</b>Ni des affaires, ni des agents, ni des magistrats</li>
+      </ul></div>
+  </div>
+  <aside class="notes">Cette diapositive reste affichée pendant les questions. Questions probables : hébergement et souveraineté des données ; qualification au regard de l’AI Act (annexe III, justice) ; accès aux applications existantes, qui n’ont pas toutes d’API ; responsabilité en cas d’alerte manquée ; différence avec les outils existants. Références juridiques à faire valider par l’équipe avant le passage.</aside>
+</section>
+
+</div></div>
+
+<div class="progress" id="progress"></div>
+<div class="hud" id="hud" role="toolbar" aria-label="Navigation">
+  <button id="b-prev" aria-label="Diapositive précédente"><svg viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+  <span class="count" id="count">1 / 12</span>
+  <button id="b-next" aria-label="Diapositive suivante"><svg viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></button>
+  <button id="b-toc" aria-label="Sommaire (S)"><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
+  <button id="b-notes" aria-label="Notes de l’orateur (N)"><svg viewBox="0 0 24 24"><path d="M6 4h9l4 4v12H6z"/><path d="M9 12h7M9 16h5"/></svg></button>
+  <button id="b-full" aria-label="Plein écran (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+<aside class="notes-panel" id="notes" hidden>
+  <div><h4 id="notes-h"></h4><p id="notes-t"></p></div>
+  <div class="side"><span>Temps écoulé</span><span class="timer" id="timer">00:00</span><button id="b-reset">Remettre à zéro</button><span id="notes-next"></span></div>
+</aside>
+<nav class="toc" id="toc" hidden aria-label="Sommaire"><h4>Sommaire</h4><div id="toc-list"></div></nav>
+<div class="blank" id="blank" hidden></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const stage=$('#stage'), slides=[...document.querySelectorAll('.slide')], N=slides.length;
+
+/* Symboles d’état (pastilles pleines, comme dans le prototype) */
+const SYMS={
+  ok:['#34C759','<path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'],
+  todo:['#FF9500','<path d="M8 4.2V8l2.6 1.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+  ko:['#FF3B30','<path d="M8 4.2v4.6" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><circle cx="8" cy="11.4" r="1.1" fill="#fff"/>'],
+  no:['#8E8E93','<path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>']
+};
+const sym=(k,s)=>`<svg class="sym" width="${s}" height="${s}" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="${SYMS[k][0]}"/>${SYMS[k][1]}</svg>`;
+document.querySelectorAll('[data-sym]').forEach(el=>{el.outerHTML=sym(el.dataset.sym,el.dataset.size||20)});
+
+/* Graphe des plaintes (diapositive 7) */
+(function(){
+  const P=[['P1','M. A.','Azur Séjours'],['P2','Mme B.','Gîtes de Provence Direct'],['P3','M. C.','Villa Lumière'],['P4','Mme D.','Azur Séjours'],['P5','M. E.','Mas des Oliviers']];
+  const I=[['Domaine de paiement','resa-securisee.example'],['IBAN','FR76 •••• 4821'],['IBAN','FR76 •••• 9107'],['Téléphone','07 •• •• •• 13']];
+  const L=[[0,0,1],[1,0,1],[3,0,1],[0,1,2],[1,1,2],[2,2,2],[3,2,2],[0,3,2],[2,3,2]];
+  const py=k=>k*92, iy=k=>20+k*108;
+  const links=L.map(([p,i,st])=>{const y1=py(p)+33,y2=iy(i)+37;return `<path class="fl" data-step="${st}" d="M360 ${y1} C680 ${y1} 680 ${y2} 1000 ${y2}"></path>`}).join('');
+  const pn=P.map(([id,who,site],k)=>`<g class="pn${k<4?' in-series':' p5'}"><rect x="1" y="${py(k)}" width="358" height="66" rx="16"></rect><text class="nm" x="24" y="${py(k)+30}">${id} · ${who}</text><text class="sb" x="24" y="${py(k)+54}">${site}</text>${k===4?`<text class="sb p5-t" x="200" y="${py(k)+30}">ressemblance seule</text>`:''}</g>`).join('');
+  const inn=I.map(([t,v],k)=>`<g class="in"><rect x="1000" y="${iy(k)}" width="359" height="74" rx="16"></rect><text class="ty" x="1024" y="${iy(k)+28}">${t}</text><text class="nm" x="1024" y="${iy(k)+56}">${v}</text></g>`).join('');
+  $('#fraud').innerHTML=links+pn+inn;
+})();
+
+/* Navigation */
+let i=0, step=0, notesOpen=false, t0=Date.now();
+const maxStep=s=>Math.max(+(s.dataset.steps||0),...[...s.querySelectorAll('[data-step]')].map(e=>+e.dataset.step),0);
+function fit(){
+  const nh=notesOpen?$('#notes').offsetHeight:0, avail=innerHeight-nh;
+  const s=Math.min(innerWidth/1600,avail/900);
+  stage.style.setProperty('--s',s);stage.style.top=(avail/2)+'px';
+}
+function setSteps(s,n){
+  s.querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('on',+e.dataset.step<=n));
+  for(let k=1;k<=6;k++)s.classList.toggle('at-'+k,n>=k);
+}
+function apply(){
+  slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.classList.toggle('past',k<i);s.setAttribute('aria-hidden',k===i?'false':'true');if('inert' in s)s.inert=k!==i});
+  setSteps(slides[i],step);
+  $('#count').textContent=`${i+1} / ${N}`;
+  $('#progress').style.width=((i+1)/N*100)+'%';
+  const nt=slides[i].querySelector('.notes');
+  $('#notes-h').textContent=`${i+1}. ${slides[i].dataset.title}`;
+  $('#notes-t').textContent=nt?nt.textContent:'';
+  $('#notes-next').textContent=i<N-1?`Suivante : ${slides[i+1].dataset.title}`:'Dernière diapositive';
+  [...document.querySelectorAll('#toc-list button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));
+  try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+}
+function next(){const m=maxStep(slides[i]);if(step<m){step++;apply()}else if(i<N-1){i++;step=0;apply()}}
+function prev(){if(step>0){step--;apply()}else if(i>0){i--;step=maxStep(slides[i]);apply()}}
+function goTo(k){i=Math.max(0,Math.min(N-1,k));step=0;apply()}
+function toggleNotes(){notesOpen=!notesOpen;$('#notes').hidden=!notesOpen;fit()}
+function toggleToc(force){const t=$('#toc');t.hidden=force===undefined?!t.hidden:!force}
+function full(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}}
+
+$('#toc-list').innerHTML=slides.map((s,k)=>`<button data-go="${k}"><span>${k+1}</span>${s.dataset.title}</button>`).join('');
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if('next' in b.dataset){next();return}
+  if(b.dataset.go!==undefined){goTo(+b.dataset.go);toggleToc(false);return}
+  if(b.id==='b-next')next();else if(b.id==='b-prev')prev();
+  else if(b.id==='b-toc')toggleToc();else if(b.id==='b-notes')toggleNotes();
+  else if(b.id==='b-full')full();else if(b.id==='b-reset')t0=Date.now();
+});
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const k=e.key;
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(k)){if(k==='Enter'&&e.target.closest('button,a'))return;e.preventDefault();next()}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(k)){e.preventDefault();prev()}
+  else if(k==='Home')goTo(0);else if(k==='End')goTo(N-1);
+  else if(k==='f'||k==='F')full();
+  else if(k==='n'||k==='N')toggleNotes();
+  else if(k==='s'||k==='S'||k==='o'||k==='O')toggleToc();
+  else if(k==='b'||k==='B'||k==='.')$('#blank').hidden=!$('#blank').hidden;
+  else if(k==='Escape'){toggleToc(false);$('#blank').hidden=true}
+});
+let tx=null;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)(dx<0?next:prev)();tx=null});
+
+/* La barre de contrôle s’efface quand la souris ne bouge plus */
+let idleT;
+const wake=()=>{$('#hud').classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(()=>$('#hud').classList.add('idle'),2500)};
+document.addEventListener('mousemove',wake);wake();
+
+setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);$('#timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`},1000);
+addEventListener('resize',fit);
+addEventListener('beforeprint',()=>slides.forEach(s=>setSteps(s,9)));
+addEventListener('afterprint',()=>{slides.forEach(s=>setSteps(s,0));apply()});
+
+const h=parseInt((location.hash||'').slice(1),10);
+if(h>=1&&h<=N)i=h-1;
+fit();apply();
+})();
+</script>
+</body>
+</html>

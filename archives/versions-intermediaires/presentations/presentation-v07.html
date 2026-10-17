@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chronos, présentation</title>
+<style>
+/* Présentation 16:9 en un seul fichier, sans dépendance : scène de 1600 × 900 mise à l’échelle de l’écran.
+   Habillage identique au prototype : palette des services publics, Arial, formes droites, badge IA pour tout ce que fait l’intelligence artificielle.
+   Clavier : → / Espace / PageDown suivant, ← / PageUp précédent, F plein écran, N notes, S sommaire, B écran blanc. */
+:root{
+  --bg:#FFFFFF; --well:#F6F6F6; --ink:#161616; --text:#3A3A3A; --ink-2:#666666; --ink-3:#929292; --line:#DDDDDD;
+  --tint:#000091; --tint-hover:#1212FF; --tint-fill:#E3E3FD; --blue-alt:#F5F5FE; --blue-contrast:#ECECFE; --blue-main:#6A6AF4;
+  --red:#CE0500; --red-bg:#FFE9E9; --orange:#B34000; --orange-bg:#FFE9E6; --green:#18753C; --green-bg:#B8FEC9; --info:#0063CB; --info-bg:#E8EDFF;
+  --p-penal:#E4794A; --p-op:#A558A0; --p-je:#00A95F; --p-jaf:#417DC4;
+  --font:Arial,"Helvetica Neue",Helvetica,sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
+h1,h2,h3,h4,p,ul,ol{margin:0;padding:0}
+ul,ol{list-style:none}
+button{font:inherit}
+.deck{position:fixed;inset:0;background:var(--bg)}
+.stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform:translate(-50%,-50%) scale(var(--s,1));transform-origin:center}
+.slide{position:absolute;inset:0;padding:80px 120px 100px;display:flex;flex-direction:column;gap:28px;opacity:0;visibility:hidden;transform:translateX(32px);transition:opacity .45s var(--ease),transform .45s var(--ease),visibility 0s linear .45s}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.slide.past{transform:translateX(-32px)}
+.slide::after{content:"Chronos";position:absolute;left:120px;bottom:40px;font-size:22px;font-weight:700;color:var(--ink);padding-top:10px;border-top:2px solid var(--tint)}
+.slide.s-title::after{display:none}
+.slide h2{font-size:66px;line-height:1.12;font-weight:700;color:var(--ink);max-width:1360px;text-wrap:balance}
+.sub{font-size:32px;line-height:1.45;color:var(--text);max-width:1180px}
+.notes{display:none}
+[data-step]{opacity:0;transform:translateY(12px);transition:opacity .4s var(--ease),transform .4s var(--ease)}
+[data-step].on{opacity:1;transform:none}
+.btn{appearance:none;border:0;font:700 22px/1 var(--font);padding:18px 28px;background:var(--tint);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:12px;text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--tint-hover)}
+.btn.sec{background:#fff;color:var(--tint);box-shadow:inset 0 0 0 2px var(--tint)}
+.btn.sec:hover{background:var(--blue-alt)}
+.btn:focus-visible,.hud button:focus-visible,.toc button:focus-visible{outline:3px solid #0A76F6;outline-offset:3px}
+.badge{display:inline-flex;align-items:center;font-size:22px;line-height:28px;font-weight:700;text-transform:uppercase;padding:0 10px;border-radius:4px;white-space:nowrap}
+.badge.ai{background:var(--tint-fill);color:var(--tint);text-transform:none}
+.badge.proto{background:var(--info-bg);color:var(--info)}
+.sym{display:inline-block;flex:none;vertical-align:middle}
+.ic svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic svg.sym{stroke:none}
+.tile{background:#fff;border:1px solid var(--line);box-shadow:inset 0 -5px 0 0 var(--tint);padding:32px 30px 36px;display:flex;flex-direction:column;gap:12px}
+.tile .ic{width:56px;height:56px;display:grid;place-items:center;background:var(--blue-contrast);color:var(--tint)}
+.tile .ic svg{width:32px;height:32px}
+.tile h3{font-size:37px;line-height:1.2;color:var(--tint)}
+.tile p{font-size:26px;line-height:1.45}
+/* Encadré d’alerte : bande de couleur à gauche, icône blanche */
+.abox{--band:var(--red);position:relative;background:#fff;border:1px solid var(--band);padding:20px 24px 20px 84px;display:flex;flex-direction:column;gap:6px}
+.abox::before{content:"";position:absolute;left:0;top:0;bottom:0;width:60px;background:var(--band)}
+.abox > .sym{position:absolute;left:15px;top:20px}
+.abox.todo{--band:var(--orange)}
+.abox.info{--band:var(--tint)}
+.abox.ok{--band:var(--green)}
+.abox b{font-size:28px;line-height:1.3;color:var(--ink)}
+.abox span{font-size:22px;color:var(--ink-2)}
+.abox .why{font-size:22px;line-height:1.45;color:var(--text);background:var(--blue-alt);padding:10px 12px;margin-top:6px;display:flex;gap:10px;align-items:flex-start}
+.abox .why .badge{font-size:18px;line-height:24px;flex:none}
+
+/* 1 · Titre */
+.s-title{flex-direction:row;align-items:center;gap:80px}
+.t-left{flex:1.15;display:flex;flex-direction:column;gap:0}
+.t-left .badge{align-self:flex-start;margin-bottom:36px}
+.t-left h1{font-size:183px;line-height:.95;font-weight:700;color:var(--ink);letter-spacing:-.02em;padding-bottom:28px;border-bottom:6px solid var(--tint);align-self:flex-start}
+.t-left .lead{font-size:49px;line-height:1.25;font-weight:700;color:var(--tint);margin-top:40px;max-width:780px}
+.t-left .promise{font-size:32px;line-height:1.5;margin-top:22px;max-width:760px}
+.t-left .meta{font-size:24px;color:var(--ink-2);margin-top:48px}
+.t-right{flex:1;display:flex;flex-direction:column;gap:16px}
+.t-right .abox b{font-size:26px}
+.t-right .abox span{font-size:21px}
+
+/* 2 · Le cas */
+.case{position:relative;height:540px}
+.case svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.case .ln{stroke:var(--ink-3);stroke-width:3;stroke-dasharray:4 12;fill:none}
+.at-1 .case .ln{stroke:var(--tint);stroke-dasharray:14 10;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.pcard{position:absolute;width:440px;height:150px;background:#fff;border:1px solid var(--line);padding:22px 26px;display:flex;flex-direction:column;gap:4px;transition:border-color .4s,background .4s}
+.pcard.tl{left:0;top:0}.pcard.tr{right:0;top:0}.pcard.bl{left:0;bottom:0}.pcard.br{right:0;bottom:0}
+.pcard .h{display:flex;align-items:center;gap:12px;font-size:33px;font-weight:700;color:var(--ink)}
+.pcard .h i{width:14px;height:14px;border-radius:50%;background:var(--c)}
+.pcard small{font-size:23px;color:var(--ink-2)}
+.pcard .q,.pcard .a{font-size:26px;margin-top:auto;display:flex;align-items:center;gap:10px}
+.pcard .q{color:var(--ink-2)}
+.pcard .a{display:none;color:var(--tint);font-weight:700}
+.pcard .a .badge{font-size:17px;line-height:22px;padding:0 6px}
+.at-1 .pcard{border-color:var(--tint);background:var(--blue-alt);box-shadow:inset 0 -4px 0 0 var(--tint)}
+.at-1 .pcard .q{display:none}
+.at-1 .pcard .a{display:flex}
+.hubc{position:absolute;left:50%;top:195px;transform:translateX(-50%);width:440px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.hubc .av{width:150px;height:150px;border-radius:50%;background:var(--tint);color:#fff;display:grid;place-items:center;font-size:63px;font-weight:700;position:relative;margin-bottom:6px}
+.hubc .av::after{content:"";position:absolute;inset:-12px;border-radius:50%;border:3px solid var(--p-penal);animation:ring 2s ease-out infinite}
+.at-1 .hubc .av::after{display:none}
+@keyframes ring{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(1.35)}}
+.hubc b,.hubc span,.hubc .done{background:#fff;padding:2px 12px}
+.hubc b{font-size:34px;color:var(--ink)}
+.hubc span{font-size:26px;color:var(--ink-2)}
+.hubc .btn{margin-top:12px;font-size:24px;padding:16px 22px}
+.hubc .done{display:none;font-size:26px;color:var(--tint);font-weight:700;margin-top:12px}
+.at-1 .hubc .btn{display:none}
+.at-1 .hubc .done{display:block}
+
+/* 3 · Problématique */
+.quest{font-size:56px;line-height:1.3;font-weight:700;color:var(--tint);max-width:1300px;padding-left:36px;border-left:6px solid var(--tint);text-wrap:balance}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:auto}
+.three > div{background:var(--well);padding:28px 30px;display:flex;flex-direction:column;gap:10px}
+.three b{font-size:27px;color:var(--ink);text-transform:uppercase;letter-spacing:.02em}
+.three p{font-size:27px;line-height:1.45}
+
+/* 4 · Ce que fait l’IA */
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;align-items:stretch;margin-top:12px}
+.four .tile{min-height:340px}
+.kicker{font-size:37px;font-weight:700;color:var(--ink)}
+.kicker span{color:var(--tint)}
+
+/* 5 · Lecture du PV */
+.pvg{display:grid;grid-template-columns:1.1fr 1fr;grid-template-rows:auto auto;gap:22px 36px}
+.doc{background:#fff;border:1px solid var(--line);padding:26px 30px;display:flex;flex-direction:column;gap:8px}
+.doc h4{font-size:21px;color:var(--ink-2);font-weight:700;margin-bottom:4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.doc p{font-size:26px;line-height:1.45}
+.doc mark{background:none;color:inherit;padding:0 3px;transition:background .5s,color .5s}
+.at-1 .doc mark.t{background:var(--info-bg);color:var(--info)}
+.at-1 .doc mark.p{background:#FEE7FC;color:#6E445A}
+.at-1 .doc mark.a{background:#FEECC2;color:#716043}
+.doc .legend{display:flex;gap:8px;font-size:18px}
+.doc .legend mark{padding:0 6px}
+.doc .miss{background:var(--red-bg);color:var(--red);font-weight:700;padding:6px 10px;margin-inline:-10px}
+.checks{display:flex;flex-direction:column;gap:6px}
+.checks li{display:flex;gap:14px;align-items:flex-start;background:var(--well);padding:13px 16px}
+.checks li .sym{margin-top:2px}
+.checks b{display:block;font-size:26px;color:var(--ink)}
+.checks span{font-size:22px;color:var(--ink-2);line-height:1.35}
+.checks li.bad{background:var(--red-bg)}
+.checks li.bad b{color:var(--red)}
+.pvg .abox{grid-column:1/-1}
+
+/* 6 · Gestion des alertes */
+.flow{display:grid;grid-template-columns:1fr 60px 0.9fr 60px 1.25fr;align-items:stretch;flex:1;min-height:0;gap:0}
+.col h4{font-size:23px;color:var(--ink-2);font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.02em}
+.sig{display:flex;flex-direction:column;gap:6px}
+.sig li{background:var(--well);padding:10px 14px;font-size:23px;color:var(--ink);display:flex;justify-content:space-between;gap:10px}
+.sig li span{color:var(--ink-2);font-size:20px}
+.arrow{display:grid;place-items:center;color:var(--tint)}
+.arrow svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.engine{background:var(--tint);color:#fff;padding:30px 28px;display:flex;flex-direction:column;gap:16px;align-self:center}
+.engine b{font-size:37px}
+.engine .badge{background:#fff;color:var(--tint);align-self:flex-start}
+.engine li{font-size:26px;line-height:1.35;padding-left:22px;position:relative}
+.engine li::before{content:"";position:absolute;left:0;top:11px;width:9px;height:9px;background:#fff}
+.dest{display:flex;flex-direction:column;gap:12px}
+.dest .who{font-size:20px;font-weight:700;color:var(--tint);text-transform:uppercase;letter-spacing:.02em}
+.dest .abox{padding:14px 18px 14px 70px}
+.dest .abox::before{width:50px}
+.dest .abox > .sym{left:12px;top:16px}
+.dest .abox b{font-size:23px}
+.dest .abox span{font-size:20px}
+
+/* 7 · Assistant */
+.chatg{display:grid;grid-template-columns:1.35fr 1fr;gap:48px;flex:1;min-height:0;align-items:start}
+.chat{background:#fff;border:1px solid var(--line);display:flex;flex-direction:column}
+.chat-h{display:flex;align-items:center;gap:12px;padding:18px 24px;border-bottom:1px solid var(--line);font-size:27px;font-weight:700;color:var(--ink)}
+.chat-b{padding:24px;display:flex;flex-direction:column;gap:16px;min-height:380px}
+.bq{align-self:flex-end;background:var(--tint);color:#fff;font-size:26px;padding:14px 18px;max-width:80%}
+.ba{align-self:flex-start;background:var(--well);color:var(--ink);font-size:24px;line-height:1.5;padding:16px 18px;max-width:92%}
+.ba .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ba .chips span{background:#fff;box-shadow:inset 0 0 0 1px var(--line);color:var(--tint);font-size:20px;padding:4px 12px}
+.typing::after{content:"▍";margin-left:2px;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0}}
+.chat-s{display:flex;flex-wrap:wrap;gap:8px;padding:0 24px 22px}
+.chat-s span{background:#EEEEEE;border-radius:16px;padding:4px 14px;font-size:20px}
+.side-t{display:flex;flex-direction:column;gap:24px}
+.side-t p{font-size:32px;line-height:1.45}
+.side-t b{color:var(--ink)}
+
+/* 8 · Validation humaine */
+.valg{display:grid;grid-template-columns:1.2fr 1fr;gap:44px;flex:1;min-height:0;align-items:start}
+.letter{background:#fff;border:1px solid var(--line);padding:28px 32px;display:flex;flex-direction:column;gap:14px}
+.letter .top{display:flex;gap:12px;align-items:center;font-size:21px;color:var(--ink-2)}
+.letter p{font-size:26px;line-height:1.55;color:var(--ink)}
+.vchecks{display:flex;flex-direction:column;gap:10px}
+.vchecks li{display:flex;gap:16px;align-items:flex-start;background:var(--well);padding:16px 18px}
+.ck{width:28px;height:28px;border:2px solid var(--ink);border-radius:4px;flex:none;display:grid;place-items:center;transition:background .3s,border-color .3s}
+.ck svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:3;opacity:0}
+.at-1 .ck1,.at-2 .ck2,.at-3 .ck3{background:var(--tint);border-color:var(--tint)}
+.at-1 .ck1 svg,.at-2 .ck2 svg,.at-3 .ck3 svg{opacity:1}
+.vchecks b{display:block;font-size:26px;color:var(--ink)}
+.vchecks span{font-size:21px;color:var(--ink-2)}
+.stamp{background:var(--green-bg);color:var(--green);font-size:27px;font-weight:700;padding:18px 20px;display:flex;gap:12px;align-items:center;margin-top:6px}
+
+/* 9 · Démonstration */
+.path{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;counter-reset:n;margin-top:20px}
+.path li{position:relative}
+.path li::before{counter-increment:n;content:counter(n);width:50px;height:50px;background:var(--tint);color:#fff;display:grid;place-items:center;font-size:29px;font-weight:700;margin-bottom:6px}
+.path b{font-size:34px;color:var(--tint)}
+.path span{font-size:26px;line-height:1.4}
+.demo-cta{display:flex;align-items:center;gap:24px;margin-top:40px}
+.demo-cta .btn{font-size:32px;padding:22px 34px}
+.demo-cta p{font-size:26px;color:var(--ink-2);max-width:640px}
+
+/* 10 · Garde-fous */
+.law{font-size:23px;color:var(--ink-2);line-height:1.5;padding-top:18px;border-top:1px solid var(--line);margin-top:auto}
+.law b{color:var(--ink)}
+
+/* 11 · Pilote */
+.seq{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:30px;position:relative}
+.seq::before{content:"";position:absolute;left:40px;right:40px;top:40px;border-top:3px solid var(--line)}
+.seq li{display:flex;flex-direction:column;gap:12px;position:relative}
+.seq .n{width:80px;height:80px;background:var(--tint);color:#fff;display:grid;place-items:center;font-size:44px;font-weight:700;box-shadow:0 0 0 10px #fff}
+.seq b{font-size:39px;color:var(--ink);margin-top:16px}
+.seq p{font-size:28px;line-height:1.45;max-width:400px}
+
+/* 12 · Sous le capot */
+.spec{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;flex:1;min-height:0}
+.spec h3{font-size:24px;color:var(--ink-2);font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.02em}
+.rows{border:1px solid var(--line)}
+.rows li{display:grid;grid-template-columns:200px 1fr;gap:16px;padding:12px 20px;font-size:22px;line-height:1.4}
+.rows li + li{border-top:1px solid var(--line)}
+.rows li b{color:var(--ink)}
+.rows li.ai{background:var(--blue-alt)}
+.rows li.ai b{color:var(--tint)}
+.faq li{display:block}
+.faq li b{display:block;margin-bottom:2px}
+
+/* Alerte qui ne se perd jamais */
+.life{display:grid;grid-template-columns:repeat(4,1fr);margin-top:6px}
+.life li{position:relative;padding:22px 30px 24px 26px;background:var(--blue-alt);border:1px solid var(--line);margin-right:-1px;display:flex;flex-direction:column;gap:6px}
+.life li .n{font-size:20px;font-weight:700;color:var(--ink-2)}
+.life li b{font-size:32px;color:var(--tint)}
+.life li span{font-size:23px;line-height:1.4}
+.life li:not(:last-child)::after{content:"";position:absolute;right:-14px;top:50%;width:24px;height:24px;background:var(--bg);border-top:3px solid var(--tint);border-right:3px solid var(--tint);transform:translateY(-50%) rotate(45deg);z-index:1}
+.three-t{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.three-t .tile{padding:26px 26px 30px}
+.three-t .tile h3{font-size:32px}
+.three-t .tile p{font-size:24px}
+.foot-l{font-size:23px;color:var(--ink-2)}
+
+/* Déménagement de la victime */
+.mvg{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;flex:1;min-height:0;align-items:start}
+.pmap{width:100%;height:auto;display:block;background:var(--blue-alt)}
+.pmap text{font-family:var(--font)}
+.pmap .commune{fill:#fff;stroke:var(--line);stroke-width:2}
+.pmap .commune.c2{transition:stroke .6s}
+.at-1 .pmap .commune.c2{stroke:var(--red);stroke-width:3}
+.pmap .zone-int{fill:var(--red-bg);stroke:var(--red);stroke-width:2;stroke-dasharray:7 6}
+.pmap .cn{font-size:23px;font-weight:700;fill:var(--ink)}
+.pmap .zl{font-size:17px;font-weight:700;fill:var(--red)}
+.pmap .dist{stroke:var(--ink-3);stroke-width:2.5;stroke-dasharray:5 6}
+.pmap .dist.bad{stroke:var(--red);stroke-width:3}
+.pmap .dl{font-size:21px;font-weight:700;fill:var(--ink-2)}
+.pmap .dl.bad{fill:var(--red)}
+.pmap .mv{fill:var(--tint);stroke:#fff;stroke-width:2.5}
+.pmap .mv.old{fill:var(--ink-3)}
+.pmap .mr{fill:var(--red);stroke:#fff;stroke-width:2.5}
+.pmap .ml{font-size:18px;font-weight:700;fill:var(--ink)}
+.pmap .aft,.pmap .bef{transition:opacity .6s}
+.pmap .aft{opacity:0}
+.at-1 .pmap .aft{opacity:1}
+.at-1 .pmap .bef{opacity:0}
+.mv-side{display:flex;flex-direction:column;gap:12px}
+.mv-side .src-l{font-size:23px;line-height:1.45;color:var(--text)}
+.mv-side .src-l b{color:var(--ink)}
+.mv-side .abox{padding:14px 18px 14px 70px}
+.mv-side .abox::before{width:50px}
+.mv-side .abox > .sym{left:12px;top:16px}
+.mv-side .abox b{font-size:24px}
+.mv-side .abox span{font-size:21px}
+.fijais{font-size:22px;line-height:1.45;color:var(--ink-2);border-left:4px solid var(--tint);padding:6px 0 6px 14px}
+
+/* Données certifiées */
+.relg{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.relc{border:1px solid var(--line);padding:24px 26px;display:flex;flex-direction:column;gap:12px;background:#fff}
+.relc .rl{align-self:flex-start;font-size:22px;font-weight:700;padding:2px 12px;border-radius:4px}
+.relc.cert .rl{background:var(--green-bg);color:var(--green)}
+.relc.verif .rl{background:var(--info-bg);color:var(--info)}
+.relc.decl .rl{background:#EEEEEE;color:var(--text)}
+.relc p{font-size:26px;line-height:1.45}
+
+.igj{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.igj li{display:grid;grid-template-columns:620px 1fr 110px;gap:20px;align-items:center;font-size:28px;color:var(--ink)}
+.igb{height:26px;background:#EEEEEE;display:block}
+.igb i{display:block;height:100%}
+.igb i.inform{background:var(--tint)}
+.igb i.not{background:var(--orange)}
+.igp{font-weight:700;font-size:32px;text-align:right}
+/* Ajustements après agrandissement des polices */
+.case{height:580px}
+.pcard{height:208px;padding:24px 28px}
+.pcard .q,.pcard .a{font-size:27px;line-height:1.25}
+.pcard .a{align-items:flex-start}
+.pvg{gap:16px 36px}
+.doc{padding:20px 26px}
+.doc p{font-size:25px;line-height:1.35;padding:4px 10px}
+.checks li{padding:10px 16px}
+.checks b{font-size:27px}
+.checks span{font-size:22px;line-height:1.3}
+.pvg .abox{padding:12px 24px 12px 84px}
+.pvg .abox b{font-size:28px}
+.pvg .abox .why{font-size:22px;line-height:1.35;padding:8px 12px}
+.letter{padding:30px 36px}
+.letter p{font-size:30px;line-height:1.5}
+.letter .top{font-size:21px}
+.vchecks li{padding:20px 22px}
+.vchecks b{font-size:32px}
+.vchecks span{font-size:25px}
+.stamp{font-size:30px;padding:22px 24px}
+.ck{width:34px;height:34px}
+.path b{font-size:42px;line-height:1.1}
+.path span{font-size:30px;line-height:1.35}
+.path li::before{width:60px;height:60px;font-size:30px}
+.demo-cta .btn{font-size:34px;padding:28px 44px}
+.demo-cta p{font-size:28px}
+.four .tile{min-height:430px}
+.four .tile h3{font-size:42px}
+.four .tile p{font-size:30px;line-height:1.4}
+.seq b{font-size:44px}
+.seq p{font-size:32px;line-height:1.4;max-width:440px}
+.law{font-size:26px;line-height:1.45}
+.sources li b{font-size:25px}
+.sources li span{font-size:20px}
+.sig li{font-size:23px;padding:11px 16px}
+.engine li{font-size:26px}
+.dest .abox b{font-size:24px}
+.dest .abox span{font-size:20px}
+.kicker{font-size:40px}
+.path{gap:30px;margin-top:40px}
+.path b{font-size:46px}
+.path span{font-size:34px}
+.path li::before{width:70px;height:70px;font-size:34px;margin-bottom:14px}
+.demo-cta{margin-top:70px}
+.seq{margin-top:60px}
+.seq .n{width:100px;height:100px;font-size:46px}
+.seq::before{top:50px}
+.seq b{font-size:54px;margin-top:26px}
+.seq p{font-size:38px;max-width:460px}
+.need p{font-size:48px}
+.need{gap:34px}
+/* Navigation, notes, sommaire */
+.progress{position:fixed;left:0;bottom:0;height:4px;background:var(--tint);transition:width .4s var(--ease);z-index:20}
+.hud{position:fixed;right:18px;bottom:16px;display:flex;align-items:center;gap:2px;padding:6px;background:#fff;box-shadow:0 0 0 1px var(--line),0 8px 24px rgba(0,0,18,.12);z-index:30;transition:opacity .3s}
+.hud.idle{opacity:0;pointer-events:none}
+.hud button{appearance:none;border:0;background:none;width:36px;height:36px;display:grid;place-items:center;color:var(--tint);cursor:pointer}
+.hud button:hover{background:var(--blue-alt)}
+.hud button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hud .count{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);padding:0 8px;min-width:60px;text-align:center}
+.notes-panel{position:fixed;left:0;right:0;bottom:0;height:30vh;background:#fff;border-top:2px solid var(--tint);padding:18px 28px;display:grid;grid-template-columns:1fr 220px;gap:24px;z-index:25;font-size:18px;line-height:1.5;overflow:auto;color:var(--ink)}
+.notes-panel h4{font-size:13px;color:var(--ink-2);font-weight:700;margin-bottom:6px}
+.notes-panel .side{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2)}
+.notes-panel .timer{font-size:34px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.notes-panel .side button{appearance:none;border:0;background:#fff;box-shadow:inset 0 0 0 1px var(--tint);padding:6px 10px;font-size:13px;cursor:pointer;color:var(--tint);align-self:flex-start}
+.toc{position:fixed;top:0;bottom:0;left:0;width:340px;background:#fff;border-right:1px solid var(--line);box-shadow:8px 0 24px rgba(0,0,18,.08);padding:24px 14px;z-index:40;overflow:auto}
+.toc h4{font-size:13px;color:var(--ink-2);font-weight:700;padding:0 10px 10px}
+.toc button{appearance:none;border:0;background:none;width:100%;display:flex;gap:12px;align-items:baseline;text-align:left;padding:10px;font-size:16px;cursor:pointer;color:var(--ink)}
+.toc button span{width:24px;color:var(--ink-2);font-size:14px}
+.toc button:hover{background:var(--blue-alt)}
+.toc button[aria-current="true"]{box-shadow:inset 3px 0 0 0 var(--tint);color:var(--tint);font-weight:700}
+.blank{position:fixed;inset:0;background:#fff;z-index:50}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  @page{size:1600px 900px;margin:0}
+  html,body{overflow:visible;height:auto}
+  .deck{position:static}
+  .stage{position:static;transform:none;width:1600px;height:auto}
+  .slide,.slide.past,.slide.active{position:relative;width:1600px;height:900px;opacity:1;visibility:visible;transform:none;break-after:page;page-break-after:always}
+  [data-step]{opacity:1;transform:none}
+  .hud,.progress,.notes-panel,.toc,.blank{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck"><div class="stage" id="stage">
+
+<!-- 1 -->
+<section class="slide s-title" data-title="Chronos">
+  <div class="t-left">
+    <span class="badge proto">Prototype</span>
+    <h1>Chronos</h1>
+    <p class="lead">L’assistant IA qui veille sur chaque procédure.</p>
+    <p class="promise">Il lit chaque acte, relie les procédures et alerte la bonne personne, à temps. Le professionnel décide.</p>
+    <p class="meta">Hackathon Droit et Microsoft, octobre 2026</p>
+  </div>
+  <div class="t-right">
+    <div class="abox"><i data-sym="ko" data-size="30"></i><b>Garde à vue de M. Laurent T. : aucun avis au procureur retrouvé</b><span>Pour le parquet de permanence</span></div>
+    <div class="abox"><i data-sym="ko" data-size="30"></i><b>Permission de sortir du 12/09 : aucun avis à la victime</b><span>Pour l’application des peines</span></div>
+    <div class="abox info"><i data-sym="info" data-size="30"></i><b>Libération de M. R. le 29/10 : avis à la victime rédigé</b><span>À valider par le greffe</span></div>
+  </div>
+  <aside class="notes">Bonjour. Voici Chronos, un assistant d’intelligence artificielle pour les juridictions. Il lit chaque acte qui arrive, relie les procédures entre elles et alerte la bonne personne, au bon moment. À droite, trois alertes qu’il a produites ce matin. Et dans tous les cas, c’est le professionnel qui décide.</aside>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-title="Le cas" data-steps="1">
+  <h2>Jeudi 29 octobre, M. R. sort de prison.</h2>
+  <p class="sub">Quatre procédures le concernent. Aucune ne voit les trois autres.</p>
+  <div class="case">
+    <svg viewBox="0 0 1360 540" preserveAspectRatio="none" aria-hidden="true">
+      <line class="ln" x1="680" y1="270" x2="440" y2="75"></line>
+      <line class="ln" x1="680" y1="270" x2="920" y2="75"></line>
+      <line class="ln" x1="680" y1="270" x2="440" y2="465"></line>
+      <line class="ln" x1="680" y1="270" x2="920" y2="465"></line>
+    </svg>
+    <div class="pcard tl" style="--c:var(--p-penal)"><div class="h"><i></i>Pénal</div><small>Cassiopée, APPI</small><p class="q">Qui prévient la victime ?</p><p class="a"><span class="badge ai">IA</span>Avis à la victime rédigé</p></div>
+    <div class="pcard tr" style="--c:var(--p-op)"><div class="h"><i></i>Ordonnance de protection</div><small>WinCI TGI</small><p class="q">Le parquet est-il au courant ?</p><p class="a"><span class="badge ai">IA</span>Parquet alerté</p></div>
+    <div class="pcard bl" style="--c:var(--p-je)"><div class="h"><i></i>Assistance éducative</div><small>WinEURS</small><p class="q">Et les visites des enfants ?</p><p class="a"><span class="badge ai">IA</span>Juge des enfants saisi</p></div>
+    <div class="pcard br" style="--c:var(--p-jaf)"><div class="h"><i></i>Divorce</div><small>WinCI TGI, RPVA</small><p class="q">Le JAF le sait-il avant l’audience ?</p><p class="a"><span class="badge ai">IA</span>JAF informé, adresse protégée exclue</p></div>
+    <div class="hubc"><div class="av">JR</div><b>M. Julien R.</b><span>GENESIS : libération le 29/10</span><button class="btn" data-next>Laisser l’IA relier les dossiers</button><p class="done">4 actions préparées. Rien n’est envoyé sans validation.</p></div>
+  </div>
+  <aside class="notes">Un cas réel dans sa forme, fictif dans ses noms. M. R. sort de prison le 29 octobre. Il est concerné par une procédure pénale, une ordonnance de protection, un divorce et une assistance éducative, chacune dans son application. Qui prévient la victime ? Le juge des enfants sait-il que le père sort ? [Cliquer] Chronos lit l’événement dans GENESIS, retrouve les quatre dossiers et prépare une action pour chaque professionnel concerné. Rien n’est envoyé sans validation.</aside>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-title="Problématique">
+  <h2>Problématique</h2>
+  <p class="quest">Comment transformer la lourdeur procédurale en levier d’efficacité au service de l’état de droit ?</p>
+  <div class="three">
+    <div data-step="1"><b>Lourdeur</b><p>Chaque garantie est une obligation : informer, notifier, tenir un délai. Six applications, tout se vérifie à la main.</p></div>
+    <div data-step="1"><b>Levier</b><p>L’IA lit, relie et alerte : chaque obligation devient une action suivie, adressée au bon service.</p></div>
+    <div data-step="1"><b>État de droit</b><p>Le professionnel décide. Aucune décision automatisée : art. 22 RGPD, art. 47 loi Informatique et libertés.</p></div>
+  </div>
+  <aside class="notes">Notre problématique : comment transformer la lourdeur procédurale en levier d’efficacité au service de l’état de droit ? [→] La lourdeur : chaque garantie est une obligation d’informer, de notifier, de tenir un délai, dans six applications qui ne se parlent pas. [→] Le levier : l’IA lit, relie et alerte, et chaque obligation devient une action suivie. [→] L’état de droit : le professionnel décide, l’IA ne décide jamais.</aside>
+</section>
+
+<!-- 3b -->
+<section class="slide" data-title="Le point faible">
+  <h2>Les tribunaux informent bien en fin de peine. Beaucoup moins dans les cas imprévus.</h2>
+  <ul class="igj"><li><span class="igl">Fin de peine</span><span class="igb"><i class="inform" style="width:95.4%"></i></span><span class="igp">95,4 %</span></li><li><span class="igl">Permission de sortir</span><span class="igb"><i class="inform" style="width:86.2%"></i></span><span class="igp">86,2 %</span></li><li><span class="igl">Remise en liberté en détention provisoire</span><span class="igb"><i class="inform" style="width:79.6%"></i></span><span class="igp">79,6 %</span></li><li><span class="igl">Refus de placement en détention provisoire</span><span class="igb"><i class="inform" style="width:59.2%"></i></span><span class="igp">59,2 %</span></li><li><span class="igl">Infirmation de l’ordonnance de protection par la cour d’appel</span><span class="igb"><i class="not" style="width:55.3%"></i></span><span class="igp">55,3 %</span></li></ul>
+  <p class="foot-l">Part des tribunaux judiciaires qui informent systématiquement la victime, sauf dernière ligne : part qui déclare ne pas l’informer. Source : Inspection générale de la justice, rapport sur les VIF, décembre 2025.</p>
+  <p class="kicker" data-step="1">Chronos part de l’événement : <span>là où l’habitude ne suffit pas, l’alerte prend le relais.</span></p>
+  <aside class="notes">Le rapport de l’Inspection générale de la justice de décembre 2025 le montre : quand la libération est prévue, 95,4 % des tribunaux informent la victime. Mais ce taux tombe à 86,2 % pour une permission de sortir, 79,6 % pour une remise en liberté en détention provisoire, 59,2 % en cas de refus de placement en détention provisoire, et plus de la moitié des tribunaux déclarent ne pas informer la victime quand la cour d’appel infirme l’ordonnance de protection. Les cas imprévus sont ceux où personne ne déclenche l’avis : c’est là que Chronos agit. À vérifier avant le jury : citer les chiffres depuis le PDF officiel.</aside>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-title="L’IA lit un PV">
+  <h2>Un PV de garde à vue arrive. L’IA le lit.</h2>
+  <div class="pvg">
+    <div class="doc">
+      <h4>PV de placement en garde à vue, procédure 2026/004512 <span class="legend" data-step="1">Repérés par l’IA : <mark class="t">heures</mark><mark class="p">personnes</mark><mark class="a">actes</mark></span></h4>
+      <p>Le 15 octobre 2026 à <mark class="t">06 h 10</mark>, placement en <mark class="a">garde à vue</mark> de <mark class="p">M. Laurent T.</mark> pour violences sur sa conjointe.</p>
+      <p>À <mark class="t">06 h 15</mark>, <mark class="a">notification des droits</mark>.</p>
+      <p>À <mark class="t">06 h 20</mark>, demande d’avocat. <mark class="p">Me L.</mark> <mark class="a">avisé</mark> à <mark class="t">06 h 25</mark>.</p>
+      <p>À <mark class="t">06 h 20</mark>, demande que soit prévenue <mark class="p">Mme Sophie B.</mark>, sa compagne.</p>
+      <p class="miss" data-step="2">Aucune mention d’un avis au procureur de la République.</p>
+    </div>
+    <ul class="checks" data-step="2">
+      <li><i data-sym="ok" data-size="26"></i><div><b>Droits notifiés</b><span>Cinq minutes après le placement</span></div></li>
+      <li><i data-sym="ok" data-size="26"></i><div><b>Avocat avisé</b><span>À 6 h 25</span></div></li>
+      <li class="bad"><i data-sym="ko" data-size="26"></i><div><b>Avis au procureur</b><span>Absent du PV. Cherché dans Cassiopée, la messagerie de permanence et les autres PV : introuvable.</span></div></li>
+      <li><i data-sym="todo" data-size="26"></i><div><b>Personne à prévenir</b><span>C’est la plaignante du 14/10 : le procureur décide</span></div></li>
+    </ul>
+    <div class="abox" data-step="3"><i data-sym="ko" data-size="32"></i><b>Aucun avis au procureur retrouvé, pour le parquet de permanence</b><p class="why"><span class="badge ai">IA</span>L’heure de placement figure au PV, pas l’avis au procureur. Chronos l’a cherché dans trois autres sources, sans le trouver. Il ne conclut pas à une nullité : il montre la source et ce qu’il faut vérifier.</p></div>
+  </div>
+  <aside class="notes">Premier exemple. Un PV de garde à vue arrive. [→] L’IA le lit et repère les heures, les personnes et les actes. [→] Elle vérifie : droits notifiés, avocat avisé, c’est conforme. Mais aucun avis au procureur. Avant d’alerter, elle le cherche ailleurs : Cassiopée, messagerie de permanence, autres PV. Rien. Elle remarque aussi que la personne à prévenir est la plaignante. [→] L’alerte part au parquet de permanence, avec une explication en clair. Chronos ne dit jamais qu’un acte est nul (article 63 du CPP) : il montre la source.</aside>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-title="L’IA gère les alertes">
+  <h2>Chaque matin, l’IA trie le flot et adresse chaque alerte au bon service.</h2>
+  <div class="flow">
+    <div class="col" data-step="1"><h4>Ce qui arrive</h4>
+      <ul class="sig"><li>Fiche d’écrou modifiée<span>GENESIS</span></li><li>PV de garde à vue<span>PPN</span></li><li>Conclusions de Me D.<span>RPVA</span></li><li>Bordereau de pièces<span>RPVA</span></li><li>Ordonnance du JAP<span>APPI</span></li><li>Rapport éducatif v2<span>WinEURS</span></li><li>Convocation sans AR<span>WinEURS</span></li></ul></div>
+    <div class="arrow" data-step="2"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="engine" data-step="2"><span class="badge">IA</span><b>Chronos</b><ul><li>lit chaque acte</li><li>compare avec les autres applications</li><li>laisse passer ce qui est conforme</li><li>explique et adresse le reste</li></ul></div>
+    <div class="arrow" data-step="3"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    <div class="dest col" data-step="3"><h4>Ce que reçoit chaque service</h4>
+      <span class="who">Parquet de permanence</span>
+      <div class="abox"><i data-sym="ko" data-size="24"></i><b>Garde à vue : aucun avis au procureur retrouvé</b><span>PPN, Cassiopée</span></div>
+      <span class="who">Application des peines</span>
+      <div class="abox info"><i data-sym="info" data-size="24"></i><b>Libération du 29/10 : avis à la victime rédigé</b><span>GENESIS, Cassiopée</span></div>
+      <span class="who">Greffe JAF</span>
+      <div class="abox todo"><i data-sym="todo" data-size="24"></i><b>Pièce n°14 absente du dossier RG 26/01177</b><span>RPVA</span></div>
+    </div>
+  </div>
+  <aside class="notes">C’est le cœur du produit : la gestion des alertes. [→] Chaque matin, des dizaines d’actes arrivent de six applications. [→] L’IA les lit, les compare avec les autres sources et laisse passer ce qui est conforme, comme ici les conclusions de Me D. [→] Le reste devient des alertes expliquées, chacune adressée au service compétent : le parquet, l’application des peines, le greffe JAF. Personne ne reçoit ce qui ne le concerne pas.</aside>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-title="L’humain valide">
+  <h2>L’IA prépare. Le professionnel valide.</h2>
+  <div class="valg">
+    <div class="letter">
+      <div class="top"><span class="badge ai">IA</span>Projet d’avis rédigé à partir de GENESIS, de Cassiopée et de l’ordonnance de protection</div>
+      <p>Madame,</p>
+      <p>Vous avez demandé à être informée de la sortie de détention de M. Julien R. Sa libération est prévue le jeudi 29 octobre 2026.</p>
+      <p>Le jugement lui interdit d’entrer en contact avec vous. L’ordonnance de protection reste applicable jusqu’au 5 mai 2027.</p>
+    </div>
+    <div>
+      <ul class="vchecks">
+        <li><span class="ck ck1"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><b>La victime a demandé à être informée</b><span>Cassiopée, note d’audience, cote D-41</span></div></li>
+        <li><span class="ck ck2"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><b>Envoi au domicile élu chez son avocate</b><span>L’adresse protégée est exclue</span></div></li>
+        <li><span class="ck ck3"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><b>Projet relu</b><span>Modifiable avant validation</span></div></li>
+      </ul>
+      <p class="stamp" data-step="4"><i data-sym="ok" data-size="28"></i>Validé par Claire L., greffière, à 10 h 14. Tracé au journal.</p>
+    </div>
+  </div>
+  <aside class="notes">Ici, l’IA a rédigé l’avis à la victime à partir de trois sources. Mais rien ne part sans la greffière. [→] Elle vérifie que la victime a demandé à être informée, [→] que l’envoi part au domicile élu et non à l’adresse protégée, [→] elle relit. [→] Elle valide : c’est horodaté et tracé. L’IA fait gagner du temps, la responsabilité reste humaine.</aside>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-title="Démonstration">
+  <h2>Démonstration.</h2>
+  <ol class="path">
+    <li><b>Pilotage</b><br><span>Le point de l’IA et les alertes du jour</span></li>
+    <li><b>Vigilance</b><br><span>On dépose un PV, l’IA le lit</span></li>
+    <li><b>Affaire R. / M.</b><br><span>L’IA relie les procédures et prépare les actions</span></li>
+    <li><b>Demander à Chronos</b><br><span>Une question, une réponse sourcée</span></li>
+  </ol>
+  <div class="demo-cta"><a class="btn" href="../prototypes/prototype-v13.html" target="_blank" rel="noopener">Ouvrir le prototype</a><p>Fonctionne hors ligne. Données entièrement fictives.</p></div>
+  <aside class="notes">Passons au prototype (nouvel onglet). Parcours : 1. le point de l’IA et les alertes ; 2. Vigilance : déposer le PV d’exemple, puis « Je prends en charge » sur l’alerte de garde à vue ; 3. Affaire R. / M. : « Analyser l’impact », puis « Analyser le déménagement » ; Actions : valider l’avis ; 4. « Demander à Chronos » en haut à droite : « Que change le déménagement de Mme M. ? ». Si la démo ne répond pas, les diapositives précédentes montrent les mêmes étapes.</aside>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-title="Une IA encadrée">
+  <h2>Une IA encadrée, conçue pour la justice.</h2>
+  <div class="four">
+    <div class="tile"><span class="ic"><i data-sym="no" data-size="32"></i></span><h3>Aucune note</h3><p>Ni score ni classement des affaires, des personnes ou des agents.</p></div>
+    <div class="tile"><span class="ic"><i data-sym="no" data-size="32"></i></span><h3>Aucune qualification</h3><p>Aucun acte déclaré nul ou irrecevable : l’IA signale, le juriste qualifie.</p></div>
+    <div class="tile"><span class="ic"><i data-sym="no" data-size="32"></i></span><h3>Aucun envoi seul</h3><p>Chaque notification et chaque action passent par une validation humaine.</p></div>
+    <div class="tile"><span class="ic"><i data-sym="ok" data-size="32"></i></span><h3>Tout est sourcé</h3><p>Chaque alerte cite ses actes, chaque décision est tracée au journal.</p></div>
+  </div>
+  <p class="law"><b>Cadre :</b> art. 22 RGPD et art. 47 loi Informatique et libertés (pas de décision automatisée), directive (UE) 2016/680 (données pénales), FPR (art. 230-19 CPP), FIJAIS (art. 706-53-1 et s. CPP), secret fiscal et habilitation Datapass pour la DGFiP, AI Act annexe III (qualification à confirmer).</p>
+  <aside class="notes">La confiance est la condition de l’adoption. Chronos ne note rien ni personne, ne qualifie jamais un acte, n’envoie rien seul, et chaque alerte cite ses sources. Côté droit : pas de décision fondée sur un traitement automatisé, directive police-justice pour les données pénales, et une analyse au regard de l’AI Act que nous voulons mener avec le ministère.</aside>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-title="Prochaine étape">
+  <h2>Prochaine étape : un pilote dans un tribunal judiciaire.</h2>
+  <ol class="seq">
+    <li data-step="1"><span class="n">1</span><b>Écrire les règles avec les greffes</b><p>Violences intrafamiliales et garde à vue d’abord.</p></li>
+    <li data-step="2"><span class="n">2</span><b>Brancher deux sources</b><p>GENESIS et Cassiopée, en lecture seule.</p></li>
+    <li data-step="3"><span class="n">3</span><b>Mesurer</b><p>Temps de vérification gagné, alertes utiles, alertes écartées.</p></li>
+  </ol>
+  <aside class="notes">Pour la suite, un pilote sur un périmètre restreint. [→] D’abord, écrire les règles avec les greffes. [→] Ensuite, brancher deux sources seulement, en lecture seule. [→] Enfin, mesurer le temps gagné et la qualité des alertes.</aside>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-title="Annexe : Ce que fait l’IA">
+  <h2>Une IA au service du greffe. Quatre gestes.</h2>
+  <div class="four">
+    <div class="tile"><span class="ic"><svg viewBox="0 0 24 24"><path d="M7 3h7.5L19 7.5V21H7z"/><path d="M14 3v5h5"/><path d="M10 12.5h6M10 16h6"/></svg></span><h3>Lire</h3><p>Chaque acte, dès son arrivée : dates, heures, personnes, références, mentions.</p></div>
+    <div class="tile"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="9" cy="18" r="2.5"/><path d="M8.4 6.4l7.2 1.2M6.6 8.4l1.8 7.2M16.4 10l-5.6 6.2"/></svg></span><h3>Relier</h3><p>Les procédures d’une même situation : pénal, famille, enfants, détention.</p></div>
+    <div class="tile"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.8 1.8H4.2z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span><h3>Alerter</h3><p>Le bon service, avec une explication en clair et la source de chaque fait.</p></div>
+    <div class="tile"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M14 8l2 2"/></svg></span><h3>Préparer</h3><p>Les projets d’avis, les tâches et les réponses aux questions du greffe.</p></div>
+  </div>
+  <p class="kicker" data-step="1">Et le professionnel valide. <span>Toujours.</span></p>
+  <aside class="notes">Concrètement, l’IA de Chronos fait quatre choses. Elle lit chaque acte dès qu’il arrive. Elle relie les procédures d’une même situation. Elle alerte le bon service, avec une explication et les sources. Et elle prépare le travail : projets d’avis, tâches, réponses aux questions. [→] Le professionnel valide toujours.</aside>
+</section>
+
+<!-- 6b -->
+<section class="slide" data-title="Annexe : Une alerte ne se perd jamais">
+  <h2>Une alerte ne se perd jamais.</h2>
+  <ol class="life">
+    <li><span class="n">1</span><b>Créée</b><span>Expliquée, sourcée, adressée au rôle compétent, de jour comme de permanence.</span></li>
+    <li><span class="n">2</span><b>Vue</b><span>Dans Teams, Outlook ou sur le mobile de la permanence.</span></li>
+    <li><span class="n">3</span><b>Prise en charge</b><span>Un clic : l’escalade s’arrête, le nom et l’heure sont tracés.</span></li>
+    <li><span class="n">4</span><b>Résolue</b><span>Toujours avec un motif, versé au journal.</span></li>
+  </ol>
+  <div class="three-t" data-step="1">
+    <div class="tile"><h3>Escalade automatique</h3><p>Garde à vue : sans prise en charge en 30 minutes, l’alerte monte au magistrat de permanence.</p></div>
+    <div class="tile"><h3>Compte à rebours légal</h3><p>24 heures de garde à vue, délais d’appel, date de libération : l’échéance s’affiche sur l’alerte.</p></div>
+    <div class="tile"><h3>Alertes d’absence</h3><p>Ce qui aurait dû arriver et n’est pas arrivé : un accusé de réception, un avis, une inscription au FPR.</p></div>
+  </div>
+  <p class="foot-l" data-step="1">Chaque professionnel peut dire si l’alerte était utile : son retour ajuste les règles, jamais l’évaluation des agents.</p>
+  <aside class="notes">Une alerte n’a de valeur que si quelqu’un la traite. Dans Chronos, elle suit quatre étapes : créée, vue, prise en charge, résolue avec un motif. [→] Si personne ne la prend en charge, elle monte d’un cran : pour une garde à vue, au magistrat de permanence au bout de 30 minutes. Les échéances légales sont affichées. Et surtout, Chronos détecte les absences : ce qui aurait dû arriver et n’est pas arrivé. Aucun logiciel actuel ne voit ces trous, parce que chacun ne regarde que ses propres données.</aside>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-title="Annexe : Demander à Chronos">
+  <h2>On peut lui poser une question. Il répond avec ses sources.</h2>
+  <div class="chatg">
+    <div class="chat">
+      <div class="chat-h">Demander à Chronos <span class="badge ai">IA</span></div>
+      <div class="chat-b">
+        <p class="bq">Qu’est-ce qui bloque l’audience du 5 novembre ?</p>
+        <div class="ba" data-step="1"><p data-type="Pour l’audience d’orientation du 5 novembre (RG 26/01177), trois points restent à régler : la pièce n°14 annoncée par Me Anne V. n’est pas au dossier, l’adresse de notification de M. R. doit être mise à jour puisqu’il sera libre, et la fiche partie contient l’adresse protégée de Mme M."></p><div class="chips"><span>Audience du 5 novembre</span><span>Point V-04</span><span>Point V-01</span></div></div>
+      </div>
+      <div class="chat-s"><span>Où en est l’affaire R. / M. ?</span><span>Qui doit agir aujourd’hui ?</span><span>Résume le PV de garde à vue</span></div>
+    </div>
+    <div class="side-t">
+      <p>Une question posée en français, <b>une réponse en quelques secondes</b>.</p>
+      <p>Chaque affirmation renvoie à l’acte d’origine : <b>on vérifie en un clic</b>.</p>
+      <p>Dans Teams ou dans l’application, avec les droits d’accès de chacun.</p>
+    </div>
+  </div>
+  <aside class="notes">Troisième capacité : l’assistant. Le greffier pose une question en français. [→] Chronos répond en quelques secondes, et chaque élément de la réponse renvoie à sa source : on vérifie en un clic. Il respecte les habilitations de chacun : il ne répond que sur les dossiers que l’utilisateur peut consulter.</aside>
+</section>
+
+<!-- 8b -->
+<section class="slide" data-title="Annexe : La victime déménage">
+  <h2>La victime déménage. Chronos vérifie qu’elle reste protégée.</h2>
+  <div class="mvg">
+    <svg class="pmap" viewBox="0 0 640 360" role="img" aria-label="Schéma sans adresse : Valmont, Corbelle, interdiction de paraître et distances">
+      <circle class="commune" cx="190" cy="185" r="135"></circle><text class="cn" x="190" y="36" text-anchor="middle">Valmont</text>
+      <circle class="commune c2" cx="480" cy="175" r="125"></circle><text class="cn" x="480" y="36" text-anchor="middle">Corbelle</text>
+      <circle class="zone-int" cx="190" cy="185" r="117"></circle><text class="zl" x="190" y="345" text-anchor="middle">Interdiction de paraître pour M. R.</text>
+      <g class="bef"><line class="dist" x1="165" y1="195" x2="450" y2="140"></line><text class="dl" x="300" y="158">12 km</text></g>
+      <g class="aft"><line class="dist bad" x1="510" y1="215" x2="450" y2="140"></line><text class="dl bad" x="508" y="170">1,5 km</text></g>
+      <circle class="mv" cx="165" cy="195" r="11"></circle>
+      <g class="bef"><text class="ml" x="165" y="228" text-anchor="middle">Mme M.</text></g>
+      <g class="aft"><circle class="mv old" cx="165" cy="195" r="11"></circle><text class="ml" x="165" y="228" text-anchor="middle">Ancien domicile</text><circle class="mv" cx="510" cy="215" r="11"></circle><text class="ml" x="510" y="248" text-anchor="middle">Mme M., dès le 2/11</text></g>
+      <rect class="mr" x="440" y="130" width="20" height="20"></rect><text class="ml" x="450" y="118" text-anchor="middle">M. R. à sa sortie</text>
+    </svg>
+    <div class="mv-side">
+      <p class="src-l"><b>Sources croisées :</b> adresse de sortie déclarée au SPIP, adresse fiscale (DGFiP), FIJAIS, FPR. La nouvelle adresse n’est jamais affichée.</p>
+      <div data-step="2" class="mv-side">
+        <div class="abox"><i data-sym="ko" data-size="26"></i><b>Mme M. emménage à 1,5 km de l’adresse de sortie de M. R.</b><span>Le SPIP et la DGFiP concordent. Pour le parquet et le JAP.</span></div>
+        <div class="abox todo"><i data-sym="todo" data-size="26"></i><b>L’interdiction de paraître ne couvre plus son domicile</b><span>Elle vise Valmont seulement. À examiner par le JAP.</span></div>
+        <div class="abox todo"><i data-sym="todo" data-size="26"></i><b>Ordonnance de protection : aucun retour d’inscription au FPR</b><span>Alerte d’absence. Pour le parquet.</span></div>
+      </div>
+      <p class="fijais" data-step="2">Si l’auteur est inscrit au FIJAIS, chaque changement d’adresse qu’il déclare, sous 15 jours, est croisé de la même façon.</p>
+    </div>
+  </div>
+  <aside class="notes">Une idée qui n’existe nulle part aujourd’hui. L’avocate de Mme M. annonce un déménagement. Chronos masque la nouvelle adresse partout, puis la croise avec ce qu’il sait de M. R. [→] Surprise : l’adresse de sortie qu’il a déclarée au SPIP, confirmée par son adresse fiscale, est à 1,5 km. [→] Trois alertes : proximité pour le parquet et le JAP ; l’interdiction de paraître ne vise que Valmont, elle ne protège plus le domicile, c’est au juge de la modifier ; et l’ordonnance de protection n’a aucun retour d’inscription au fichier des personnes recherchées (article 230-19 du CPP). Pour les auteurs inscrits au FIJAIS, tenus de déclarer tout changement d’adresse sous 15 jours, le même croisement se fait dans l’autre sens.</aside>
+</section>
+
+<!-- 8c -->
+<section class="slide" data-title="Annexe : Données certifiées">
+  <h2>Des informations certifiées à la source.</h2>
+  <div class="relg">
+    <div class="relc cert"><span class="rl">Certifiée par la source</span><p>GENESIS, Cassiopée, jugements, RPVA : l’application d’origine fait foi.</p></div>
+    <div class="relc verif"><span class="rl">Vérifiée auprès d’une source officielle</span><p>API Impôt particulier de la DGFiP, état civil (COMEDEC).</p></div>
+    <div class="relc decl"><span class="rl">Déclarative</span><p>Saisie par une partie : à confirmer avant d’en tirer une conséquence.</p></div>
+  </div>
+  <div class="abox todo" data-step="1"><i data-sym="todo" data-size="32"></i><b>Avis d’imposition non conforme aux données de la DGFiP</b><span>RG 26/00931, pièce n°7 : 14 200 € indiqués, 31 800 € enregistrés par la DGFiP</span><p class="why"><span class="badge ai">IA</span>Chronos a vérifié l’avis à partir de son numéro fiscal et de sa référence. Il ne conclut pas à un faux : il signale l’écart au JAF avant l’audience.</p></div>
+  <p class="kicker" data-step="2">Dites-le-nous une fois : <span>la donnée vient de la source, pas d’une photocopie.</span></p>
+  <aside class="notes">Relier les informations ne suffit pas, encore faut-il savoir lesquelles sont fiables. Chaque donnée de Chronos porte un niveau : certifiée par l’application d’origine, vérifiée auprès d’une source officielle comme la DGFiP ou l’état civil, ou simplement déclarée par une partie. [→] Exemple : un avis d’imposition versé dans un dossier de divorce ne correspond pas aux données de la DGFiP. Chronos ne dit pas que c’est un faux ; il signale l’écart au juge avant qu’il fixe une pension. [→] C’est le principe « dites-le-nous une fois ». L’accès aux données fiscales passe par une habilitation Datapass, dans le respect du secret fiscal.</aside>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-title="Annexe : Sous le capot">
+  <h2>Sous le capot.</h2>
+  <div class="spec">
+    <div><h3>Architecture Microsoft</h3>
+      <ul class="rows">
+        <li class="ai"><b>Lire</b><span>Azure AI Document Intelligence</span></li>
+        <li class="ai"><b>Comprendre, expliquer</b><span>Azure OpenAI dans Azure AI Foundry</span></li>
+        <li class="ai"><b>Retrouver</b><span>Azure AI Search : dossiers liés, donnée déjà saisie</span></li>
+        <li class="ai"><b>Répondre</b><span>Agent Copilot Studio dans Teams</span></li>
+        <li class="ai"><b>Vérifier</b><span>API Impôt particulier (DGFiP), COMEDEC, FPR, FIJAIS</span></li>
+        <li><b>Connecter</b><span>API Management, Logic Apps, Event Grid</span></li>
+        <li><b>Agir</b><span>Power Automate, validations dans Teams</span></li>
+        <li><b>Tracer</b><span>Dataverse (source, auteur, version), Purview</span></li>
+        <li><b>Sécuriser</b><span>Entra ID : habilitations par service</span></li>
+      </ul></div>
+    <div><h3>Questions attendues</h3>
+      <ul class="rows faq">
+        <li><b>Et si l’IA se trompe ?</b><span>Elle ne décide rien. Chaque alerte se vérifie à la source, en un clic.</span></li>
+        <li><b>Les données sensibles ?</b><span>Accès selon les habilitations, coordonnées protégées masquées, journal d’audit.</span></li>
+        <li><b>Et la victime ?</b><span>Sa nouvelle adresse n’est jamais affichée : seulement des communes et des distances, aux services habilités.</span></li>
+        <li><b>Les applications existantes ?</b><span>Lecture seule par connecteurs, aucune ressaisie.</span></li>
+        <li><b>L’hébergement ?</b><span>Exigences de souveraineté à cadrer avec le ministère.</span></li>
+      </ul></div>
+  </div>
+  <aside class="notes">Cette diapositive reste affichée pendant les questions. À gauche, les briques Microsoft, en bleu celles qui portent l’IA. À droite, nos réponses aux questions les plus probables. Autres questions possibles : la différence avec un simple tableau de bord (l’IA lit les actes et explique), le coût (à chiffrer pendant le pilote).</aside>
+</section>
+
+</div></div>
+
+<div class="progress" id="progress"></div>
+<div class="hud" id="hud" role="toolbar" aria-label="Navigation">
+  <button id="b-prev" aria-label="Diapositive précédente"><svg viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+  <span class="count" id="count">1 / 12</span>
+  <button id="b-next" aria-label="Diapositive suivante"><svg viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></button>
+  <button id="b-toc" aria-label="Sommaire (S)"><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
+  <button id="b-notes" aria-label="Notes de l’orateur (N)"><svg viewBox="0 0 24 24"><path d="M6 4h9l4 4v12H6z"/><path d="M9 12h7M9 16h5"/></svg></button>
+  <button id="b-full" aria-label="Plein écran (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+<aside class="notes-panel" id="notes" hidden>
+  <div><h4 id="notes-h"></h4><p id="notes-t"></p></div>
+  <div class="side"><span>Temps écoulé</span><span class="timer" id="timer">00:00</span><button id="b-reset">Remettre à zéro</button><span id="notes-next"></span></div>
+</aside>
+<nav class="toc" id="toc" hidden aria-label="Sommaire"><h4>Sommaire</h4><div id="toc-list"></div></nav>
+<div class="blank" id="blank" hidden></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const stage=$('#stage'),slides=[...document.querySelectorAll('.slide')],N=slides.length;
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Pastilles d’état, mêmes couleurs que le prototype */
+const SYMS={
+  ok:['#18753C','<path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'],
+  todo:['#B34000','<path d="M8 4.2V8l2.6 1.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+  ko:['#CE0500','<path d="M8 4.2v4.6" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><circle cx="8" cy="11.4" r="1.1" fill="#fff"/>'],
+  info:['#000091','<circle cx="8" cy="4.9" r="1.1" fill="#fff"/><path d="M8 7.4v4.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/>'],
+  no:['#666666','<path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>']
+};
+const sym=(k,s)=>`<svg class="sym" width="${s}" height="${s}" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="${SYMS[k][0]}"/>${SYMS[k][1]}</svg>`;
+document.querySelectorAll('[data-sym]').forEach(el=>{el.outerHTML=sym(el.dataset.sym,el.dataset.size||20)});
+
+/* Texte tapé par l’assistant (diapositive 7) */
+const typers=new Map();
+function typeOut(el){
+  if(el.dataset.done==='1')return;el.dataset.done='1';
+  const full=el.dataset.type;
+  if(RM){el.textContent=full;return}
+  const words=full.split(' ');let k=0;el.textContent='';el.classList.add('typing');
+  const id=setInterval(()=>{k+=2;el.textContent=words.slice(0,k).join(' ');if(k>=words.length){clearInterval(id);el.classList.remove('typing')}},70);
+  typers.set(el,id);
+}
+function resetType(el){clearInterval(typers.get(el));el.dataset.done='';el.textContent='';el.classList.remove('typing')}
+
+/* Navigation */
+let i=0,step=0,notesOpen=false,t0=Date.now();
+const maxStep=s=>Math.max(+(s.dataset.steps||0),...[...s.querySelectorAll('[data-step]')].map(e=>+e.dataset.step),0);
+const VCK={'L’humain valide':3};
+function fit(){
+  const nh=notesOpen?$('#notes').offsetHeight:0,avail=innerHeight-nh;
+  stage.style.setProperty('--s',Math.min(innerWidth/1600,avail/900));stage.style.top=(avail/2)+'px';
+}
+function setSteps(s,n){
+  s.querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('on',+e.dataset.step<=n));
+  for(let k=1;k<=6;k++)s.classList.toggle('at-'+k,n>=k);
+  s.querySelectorAll('[data-type]').forEach(el=>{const host=el.closest('[data-step]');const vis=!host||host.classList.contains('on');if(vis&&s.classList.contains('active'))typeOut(el);else if(!vis)resetType(el)});
+}
+function apply(){
+  slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.classList.toggle('past',k<i);s.setAttribute('aria-hidden',k===i?'false':'true');if('inert' in s)s.inert=k!==i});
+  setSteps(slides[i],step);
+  $('#count').textContent=`${i+1} / ${N}`;
+  $('#progress').style.width=((i+1)/N*100)+'%';
+  const nt=slides[i].querySelector('.notes');
+  $('#notes-h').textContent=`${i+1}. ${slides[i].dataset.title}`;
+  $('#notes-t').textContent=nt?nt.textContent:'';
+  $('#notes-next').textContent=i<N-1?`Suivante : ${slides[i+1].dataset.title}`:'Dernière diapositive';
+  [...document.querySelectorAll('#toc-list button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));
+  try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+}
+function next(){const m=maxStep(slides[i]);if(step<m){step++;apply()}else if(i<N-1){i++;step=0;apply()}}
+function prev(){if(step>0){step--;apply()}else if(i>0){i--;step=maxStep(slides[i]);apply()}}
+function goTo(k){i=Math.max(0,Math.min(N-1,k));step=0;apply()}
+function toggleNotes(){notesOpen=!notesOpen;$('#notes').hidden=!notesOpen;fit()}
+function toggleToc(force){const t=$('#toc');t.hidden=force===undefined?!t.hidden:!force}
+function full(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}}
+/* La diapositive « L’humain valide » coche ses cases une à une : 4 étapes */
+slides.forEach(s=>{if(VCK[s.dataset.title])s.dataset.steps=String(Math.max(+(s.dataset.steps||0),VCK[s.dataset.title]))});
+
+$('#toc-list').innerHTML=slides.map((s,k)=>`${k===10?'<div style="font-size:13px;color:#666;padding:14px 10px 4px">Annexes pour les questions</div>':''}<button data-go="${k}"><span>${k+1}</span>${s.dataset.title}</button>`).join('');
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if('next' in b.dataset){next();return}
+  if(b.dataset.go!==undefined){goTo(+b.dataset.go);toggleToc(false);return}
+  if(b.id==='b-next')next();else if(b.id==='b-prev')prev();
+  else if(b.id==='b-toc')toggleToc();else if(b.id==='b-notes')toggleNotes();
+  else if(b.id==='b-full')full();else if(b.id==='b-reset')t0=Date.now();
+});
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const k=e.key;
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(k)){if(k==='Enter'&&e.target.closest('button,a'))return;e.preventDefault();next()}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(k)){e.preventDefault();prev()}
+  else if(k==='Home')goTo(0);else if(k==='End')goTo(N-1);
+  else if(k==='f'||k==='F')full();
+  else if(k==='n'||k==='N')toggleNotes();
+  else if(k==='s'||k==='S'||k==='o'||k==='O')toggleToc();
+  else if(k==='b'||k==='B'||k==='.')$('#blank').hidden=!$('#blank').hidden;
+  else if(k==='Escape'){toggleToc(false);$('#blank').hidden=true}
+});
+let tx=null;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)(dx<0?next:prev)();tx=null});
+let idleT;
+const wake=()=>{$('#hud').classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(()=>$('#hud').classList.add('idle'),2500)};
+document.addEventListener('mousemove',wake);wake();
+setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);$('#timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`},1000);
+addEventListener('resize',fit);
+addEventListener('beforeprint',()=>{slides.forEach(s=>{setSteps(s,9);s.querySelectorAll('[data-type]').forEach(el=>{clearInterval(typers.get(el));el.textContent=el.dataset.type})})});
+addEventListener('afterprint',()=>{slides.forEach(s=>setSteps(s,0));apply()});
+
+const h=parseInt((location.hash||'').slice(1),10);
+if(h>=1&&h<=N)i=h-1;
+fit();apply();
+})();
+</script>
+</body>
+</html>
