@@ -179,7 +179,7 @@ stateDiagram-v2
 
 ## Pourquoi ces choix
 
-Le 15 octobre, un expert à qui nous avons présenté le concept nous a mis en garde : les victimes déménagent, changent de numéro, changent d’avocat. Un message envoyé au mauvais endroit peut être plus dangereux qu’un message qui ne part pas. Cette remarque a changé la conception, comme le montre la quatrième ligne du tableau.
+Le 15 octobre, notre mentor, avocat, à qui nous avons présenté le concept, nous a mis en garde : les victimes déménagent, changent de numéro, changent d’avocat. Un message envoyé au mauvais endroit peut être plus dangereux qu’un message qui ne part pas. Cette remarque a changé la conception, comme le montre la quatrième ligne du tableau.
 
 | Choix | Pourquoi |
 |---|---|
@@ -225,7 +225,7 @@ Nous proposons un pilote de six mois dans un tribunal : trois mois pour mesurer
 
 ## Le prototype
 
-`demo/kairos.html` est un fichier unique : on l’ouvre dans un navigateur, sans installation ni connexion. Il simule l’écran de Claire L., greffière d’un tribunal fictif. Une date de libération arrive de l’administration pénitentiaire. Kairos retrouve les quatre procédures qui concernent la même personne, applique les règles, prépare six actions et rédige l’avis à la victime. La greffière le relit, coche les trois vérifications et valide.
+`demo/kairos.html` est un fichier unique : on l’ouvre dans un navigateur, sans installation ni connexion. Il simule l’écran de Claire L., greffière d’un tribunal fictif (Valmont). Une date de libération arrive de l’administration pénitentiaire. Kairos retrouve les quatre procédures qui concernent la même personne, applique les règles, prépare six actions et rédige l’avis à la victime. La greffière le relit, coche les trois vérifications et valide. Les captures ci-dessous suivent les quatre onglets : Pilotage, Affaire R. / M., Actions, Vigilance.
 
 Pour le parcourir en une minute :
 
@@ -235,11 +235,69 @@ Pour le parcourir en une minute :
 
 « Réinitialiser la démo », en bas de page, remet tout à zéro.
 
+### Pilotage : ce que Kairos a repéré depuis ce matin
+
+Le résumé de l’IA en tête, puis les alertes, classées « à traiter », « à vérifier » et « pour information ». Chaque alerte dit d’où elle vient (le logiciel et le point de contrôle) et à quel service elle s’adresse. Il n’y a ni note ni classement : seulement des alertes.
+
 <p align="center">
-  <img src="docs/img/prototype-affaire.png" width="860" alt="Capture du prototype : l’affaire R. / M. avec ses quatre procédures liées (pénal, ordonnance de protection, assistance éducative, divorce) autour de la personne concernée, et à droite les étapes de l’analyse, de la lecture de l’événement à la préparation des actions.">
+  <img src="docs/img/prototype-pilotage.png" width="860" alt="Capture du prototype : l’écran de pilotage de la greffière, avec le point de Kairos et les alertes du jour.">
+</p>
+
+<p align="center"><em>Le point de Kairos et les alertes du jour, avec leur source et leur destinataire.</em></p>
+
+Les audiences à venir se lisent comme des cartes de calendrier : en touchant l’une d’elles, on ne voit que les affaires qui posent problème, sous forme d’étiquettes (pièce absente, détenu à convoquer, adresse protégée). Les affaires en règle sont seulement comptées.
+
+<p align="center">
+  <img src="docs/img/prototype-audiences.png" width="860" alt="Capture du prototype : cinq audiences à venir, du 20 octobre au 5 novembre, avec les affaires qui posent problème.">
+</p>
+
+<p align="center"><em>Les cinq prochaines audiences et leurs points de vigilance.</em></p>
+
+### Affaire R. / M. : relier les procédures
+
+Les quatre procédures d’une même personne (pénal, ordonnance de protection, assistance éducative, divorce) vivent dans trois logiciels. Le bouton « Analyser l’impact » déroule cinq étapes visibles, de la lecture de l’événement jusqu’à « ce que Kairos n’a pas fait » : aucun envoi, aucune mesure modifiée, aucun contact avec la victime ni les enfants.
+
+<p align="center">
+  <img src="docs/img/prototype-affaire.png" width="860" alt="Capture du prototype : l’affaire R. / M. avec ses quatre procédures liées autour de la personne concernée, et à droite les étapes de l’analyse.">
 </p>
 
 <p align="center"><em>Kairos retrouve les quatre procédures liées à la même personne et détaille ce qu’il a fait, étape par étape.</em></p>
+
+La chronologie met sur une même ligne du temps les événements des quatre procédures, les avis envoyés à la victime (en vert), ceux qui manquent (en rouge) et ceux qui attendent une validation. Chaque événement renvoie à sa source.
+
+<p align="center">
+  <img src="docs/img/prototype-chronologie.png" width="860" alt="Capture du prototype : la chronologie de l’année 2026 pour les quatre procédures, avec les avis à la victime et la date de libération.">
+</p>
+
+<p align="center"><em>La chronologie de l’affaire : libération prévue le 29 octobre, avis à la victime, convocations.</em></p>
+
+Le bloc « Informer la victime : où le risque se situe » reprend les cinq chiffres de l’IGJ et dit, pour chaque situation, ce que Kairos déclenche.
+
+<p align="center">
+  <img src="docs/img/prototype-igj.png" width="860" alt="Capture du prototype : cinq barres pour la part des tribunaux qui informent la victime, de 95,4 % pour la fin de peine à 55,3 % pour l’infirmation de l’ordonnance de protection.">
+</p>
+
+<p align="center"><em>Les chiffres de l’IGJ et ce que Kairos déclenche dans chaque cas.</em></p>
+
+Chaque donnée de l’affaire porte sa source et un niveau de fiabilité (« certifiée par la source », « vérifiée », « déclarative »). Une divergence, ici la date de naissance, part en alerte sans bloquer l’identification.
+
+<p align="center">
+  <img src="docs/img/prototype-donnees.png" width="860" alt="Capture du prototype : les données de l’affaire avec leur source, leur version et leur niveau de fiabilité.">
+</p>
+
+<p align="center"><em>Une donnée saisie une fois, avec sa source, sa version et son niveau de fiabilité.</em></p>
+
+Un bloc explore le cas où la victime déménage : une carte sans aucune adresse (seulement des communes et des distances) et quatre contrôles. Il ne fait pas partie du pitch, voir [les pistes explorées](docs/pistes-explorees.md).
+
+<p align="center">
+  <img src="docs/img/prototype-demenagement.png" width="860" alt="Capture du prototype : la carte de protection de Mme M. entre les communes de Valmont et Corbelle, sans adresse, et les contrôles de l’IA.">
+</p>
+
+<p align="center"><em>Le déménagement de la victime : seulement des communes et des distances, jamais d’adresse.</em></p>
+
+### Actions : l’IA prépare, la greffière valide
+
+L’avis à la victime est rédigé en mots simples. Il ne peut être validé qu’après trois vérifications : la victime a demandé à être informée, l’envoi part chez son avocate et non à l’adresse protégée, le projet est relu. La validation est horodatée et versée au journal.
 
 <p align="center">
   <img src="docs/img/prototype-validation.png" width="860" alt="Capture du prototype : l’avis à la victime rédigé par l’IA, avec les trois vérifications cochées et le bouton Valider l’avis.">
@@ -247,14 +305,36 @@ Pour le parcourir en une minute :
 
 <p align="center"><em>La greffière relit le message rédigé par l’IA, coche les vérifications et valide. Kairos n’envoie rien seul.</em></p>
 
+### Vigilance : lire un acte, signaler ce qui manque
+
+On dépose un procès-verbal (ici un exemple de placement en garde à vue). L’IA surligne ce qu’elle a lu (heures, personnes, actes), passe sept contrôles, et constate qu’aucun avis au procureur n’y figure. Elle ne dit jamais « nul » : elle montre les sources et le magistrat apprécie.
+
+<p align="center">
+  <img src="docs/img/prototype-pv.png" width="860" alt="Capture du prototype : un procès-verbal de garde à vue annoté par l’IA, avec sept contrôles dont un avis au procureur introuvable.">
+</p>
+
+<p align="center"><em>Le PV lu par l’IA : sept contrôles, dont un avis au procureur introuvable.</em></p>
+
+Avant d’alerter, Kairos cherche l’avis dans les autres applications. L’alerte montre ensuite le PV et les recherches face à face, la conséquence possible (article 63 du code de procédure pénale), ce qu’il faut vérifier, et qui prend en charge. Sans prise en charge, elle monte au magistrat de permanence.
+
+<p align="center">
+  <img src="docs/img/prototype-alerte.png" width="860" alt="Capture du prototype : l’alerte « Garde à vue de M. Laurent T. : aucun avis au procureur retrouvé », avec l’explication de l’IA, les recherches faites et les actions possibles.">
+</p>
+
+<p align="center"><em>Une alerte complète : explication, sources, conséquence possible, vérifications, prise en charge.</em></p>
+
+### La vidéo
+
 La [vidéo de démonstration](demo/video-demo.mp4) dure 41 secondes, sans son : les alertes du jour, les audiences à venir, l’affaire R. / M. avec ses quatre procédures et sa chronologie, les données de l’affaire avec leur source, puis la lecture d’un procès-verbal de garde à vue qui se termine sur l’alerte « aucun avis au procureur retrouvé ». Elle ne montre ni l’analyse d’impact ni la validation de l’avis ; le détail, avec le parcours conseillé pour la refaire, est dans [docs/demo.md](docs/demo.md).
+
+### Ce que le prototype n’est pas
 
 Le prototype a été construit avant la version finale du pitch, et il faut le lire comme une maquette :
 
 - Il simule une libération annoncée par la prison, pas l’annulation en appel du pitch.
 - Le suivi « envoyé, distribué, consulté » n’y est pas encore : il est montré dans la présentation, à la diapositive 10.
 - Il contient des modules explorés en route qui ne font pas partie de la solution présentée : un assistant de questions, le déménagement de la victime, des croisements avec des fichiers et des sources officielles (impôts, état civil, FIJAIS, FPR). La base légale de ces croisements reste à établir, voir [les pistes explorées](docs/pistes-explorees.md).
-- Aucun logiciel judiciaire réel n’est connecté.
+- Aucun logiciel judiciaire réel n’est connecté, et rien n’est envoyé : après validation, l’avis est seulement « transmis au circuit d’envoi ».
 
 ## La présentation
 
@@ -262,7 +342,7 @@ Le prototype a été construit avant la version finale du pitch, et il faut le l
 
 ## L’équipe
 
-L’équipe souhaite rester anonyme : aucun nom n’apparaît dans ce dépôt. Elle réunit deux profils hybrides, à la croisée de l’ingénierie et du management, des profils juridiques, et un mentor, avocat.
+L’équipe souhaite rester anonyme : aucun nom n’apparaît dans ce dépôt. Elle réunit deux profils hybrides, à la croisée de l’ingénierie et du management, des profils juridiques, et un mentor, avocat. Le mentor est aussi l’expert dont la remarque, le 15 octobre, a changé la conception.
 
 ## Documentation
 
@@ -309,7 +389,7 @@ Ce dépôt est la seule source du projet : tout ce qui a été écrit ou décid
 - Inspection générale de la justice, *Évaluation du traitement judiciaire des violences intrafamiliales*, rapport définitif n° 073-25, décembre 2025 ([fichier](https://www.justice.gouv.fr/sites/default/files/2026-03/rapport_mission_igj_vif.pdf)). Enquête déclarative auprès de 152 tribunaux judiciaires : 95,4 % informent la victime d’une libération en fin de peine (p. 52), 55,3 % d’une ordonnance de protection infirmée en appel (p. 45, notes 118 et 119) ; usage limité de SISPoPP (p. 4) ; ressaisie des dossiers (p. 49). Pages et sens du dernier chiffre à contrôler dans le rapport.
 - Judilibre, open data de la Cour de cassation : 440 460 décisions de cours d’appel analysées par l’équipe (janvier 2022 à septembre 2026), 12 371 appels déclarés caducs, lecture vérifiée à la main (23 justes sur 24).
 - Règlement (UE) 2016/679, article 22 ; loi n° 78-17 du 6 janvier 1978 relative à l’informatique, aux fichiers et aux libertés, article 47.
-- Test du concept avec un expert, le 15 octobre 2026.
+- Test du concept avec notre mentor, avocat, le 15 octobre 2026.
 
 ## Licence
 

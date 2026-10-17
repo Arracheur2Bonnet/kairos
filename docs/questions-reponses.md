@@ -6,7 +6,7 @@ Les réponses viennent des annexes des présentations et de nos préparations. C
 
 **Comment savoir que le message est lu ?** Le message contient un lien sécurisé : « lu » signifie que le lien a été ouvert. C’est pourquoi le pitch dit « consulté quand c’est techniquement possible ». Un SMS ne donne pas d’accusé de lecture fiable. Sans ouverture à temps, le greffe appelle.
 
-**Et si la victime a changé de numéro, de domicile, d’avocat ?** Chaque coordonnée est conservée avec sa date et sa source. Kairos ne devine jamais : le téléphone est privilégié et, au moindre doute, une confirmation est demandée (par l’avocate ou le commissariat) avant tout envoi. C’est l’avertissement de l’expert du 15 octobre : un message mal envoyé peut être plus dangereux qu’un message absent.
+**Et si la victime a changé de numéro, de domicile, d’avocat ?** Chaque coordonnée est conservée avec sa date et sa source. Kairos ne devine jamais : le téléphone est privilégié et, au moindre doute, une confirmation est demandée (par l’avocate ou le commissariat) avant tout envoi. C’est l’avertissement de notre mentor, avocat, le 15 octobre : un message mal envoyé peut être plus dangereux qu’un message absent.
 
 **Et si l’IA se trompe ?** Elle ne décide rien. Chaque alerte et chaque fait cite l’acte d’origine et se vérifie à la source, en un clic. Chaque envoi est validé par un agent du greffe.
 

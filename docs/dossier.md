@@ -1,6 +1,6 @@
 # Le dossier rédigé
 
-Copie texte de [Kairos-dossier-redige.pdf](../Kairos-dossier-redige.pdf), pages 1 et 2. Le PDF fait foi : cette copie sert à chercher dans le texte, à le citer et à ne pas le perdre. Les mots coupés en fin de ligne ont été recollés, la typographie française rétablie ; les mots sont ceux du PDF, y compris deux petites maladresses relevées dans [les points de vigilance](points-de-vigilance.md). Le texte du pitch (pages 3 et 4) est dans [pitch.md](pitch.md).
+Copie texte de [Kairos-dossier-redige.pdf](../Kairos-dossier-redige.pdf), pages 1 et 2. Le PDF fait foi : cette copie sert à chercher dans le texte, à le citer et à ne pas le perdre. Les mots coupés en fin de ligne ont été recollés, la typographie française rétablie ; les mots sont ceux du PDF, y compris deux petites maladresses relevées dans [les points de vigilance](points-de-vigilance.md). **Une différence voulue :** « Un homme détenu pour violences conjugales demande sa mise en liberté » (le PDF dit « condamné », voir [les points de vigilance](points-de-vigilance.md)). Le texte du pitch (pages 3 et 4) est dans [pitch.md](pitch.md).
 
 ---
 
@@ -34,7 +34,7 @@ Kairos est une brique d’intelligence artificielle complémentaire à Cassiopé
 
 ## Un exemple concret
 
-Un homme condamné pour violences conjugales demande sa mise en liberté. Kairos intervient dès la demande, avant toute sortie : il ouvre le dossier et compare les éléments. L’intelligence artificielle retrouve la victime, vérifie son adresse et son dernier numéro de téléphone, et rappelle l’interdiction de contact toujours en vigueur. La victime est ainsi prévenue en amont, et non le jour où elle le croise. Si la liberté est accordée, Kairos affiche les personnes à prévenir : la victime, son avocate, le commissariat de son quartier. Le greffier valide, et le message part automatiquement : « Il sort le 20 octobre. Il n’a pas le droit de vous contacter. En danger, appelez le 17. » Si elle n’a pas lu le message la veille de la sortie, le greffe est alerté et l’appelle.
+Un homme détenu pour violences conjugales demande sa mise en liberté. Kairos intervient dès la demande, avant toute sortie : il ouvre le dossier et compare les éléments. L’intelligence artificielle retrouve la victime, vérifie son adresse et son dernier numéro de téléphone, et rappelle l’interdiction de contact toujours en vigueur. La victime est ainsi prévenue en amont, et non le jour où elle le croise. Si la liberté est accordée, Kairos affiche les personnes à prévenir : la victime, son avocate, le commissariat de son quartier. Le greffier valide, et le message part automatiquement : « Il sort le 20 octobre. Il n’a pas le droit de vous contacter. En danger, appelez le 17. » Si elle n’a pas lu le message la veille de la sortie, le greffe est alerté et l’appelle.
 
 ## Les garanties
 

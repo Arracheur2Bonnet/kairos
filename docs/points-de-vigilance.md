@@ -52,4 +52,3 @@ Ce qui n’est pas vérifié, ce qui diffère d’un livrable à l’autre, et c
 2. La phrase « demande sa mise en liberté » dans le dossier.
 3. Refaire ou non la vidéo, et le prototype sur le scénario du pitch.
 4. La licence, et le passage du dépôt en public.
-5. L’expert du 15 octobre et le mentor avocat de l’équipe sont-ils la même personne ? Le dossier parle d’un expert, le README d’un mentor ; ne pas les confondre sans confirmation.
